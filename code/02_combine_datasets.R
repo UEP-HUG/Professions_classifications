@@ -21,14 +21,13 @@ dat_gh_22 <- gh_22 |>
 
 ### 2023 ####
 dat_gh_23 <- gh_23 |> 
-  select(codbar,) |> 
+  select(codbar,events_job_loss, events_retirement, events_other_text) |> 
   rename_with(~ paste(., "gh_23", sep = "."), !matches(c("codbar")))
 
 ## Santé Travail ####
 ### 2022 ####
 dat_st_22 <- st_22 |> 
-  select(codbar,
-         burn_out) |> 
+  select(codbar, burn_out, ) |> 
   rename_with(~ paste(., "st_22", sep = "."), !matches(c("codbar")))
 
 ### ### ###
