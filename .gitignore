@@ -1,3 +1,31 @@
+# Do not version control these types of files
+*.log
+*.pdf
+*.html
+*.rds
+*.RDS
+*.png
+*.jpg
+*.csv
+*.xlsx
+*.docx
+*.txt
+*.swp
+*.shp
+*.zip
+*.aux
+*.toc
+*.tex
+*.md
+*.bbl
+*.bcf
+*.blg
+*.synctex.gz
+*.run.xml
+*.svg
+*.DS_Store
+*._.DS_Store
+
 # History files
 .Rhistory
 .Rapp.history
@@ -20,6 +48,7 @@
 
 # RStudio files
 .Rproj.user/
+*.Rproj
 
 # produced vignettes
 vignettes/*.html
