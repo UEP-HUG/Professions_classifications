@@ -1,0 +1,26 @@
+﻿ISCO_2;occupation;occupational_grouping;key_occupation
+61;Market-oriented skilled agricultural workers;Food systems workers;TRUE
+62;Market-oriented skilled forestry, fishery and hunting workers;Food systems workers;TRUE
+63;Subsistence farmers, fishers, hunters and gatherers;Food systems workers;TRUE
+92;Agricultural, forestry and fishery labourers;Food systems workers;TRUE
+94;Food preparation assistants;Food systems workers;TRUE
+22;Health professionals;Health workers ;TRUE
+32;Health associate professionals;Health workers ;TRUE
+53;Personal care workers;Health workers ;TRUE
+52;Sales workers;Retail workers;TRUE
+95;Street and related sales and service workers;Retail workers;TRUE
+54;Protective services workers;Security workers;TRUE
+71;Building and related trades workers, excluding electricians;Manual workers;TRUE
+72;Metal, machinery and related trades workers;Manual workers;TRUE
+73;Handicraft and printing workers;Manual workers;TRUE
+74;Electrical and electronic trades workers;Manual workers;TRUE
+75;Food processing, wood working, garment and other craft and related trades workers;Manual workers;TRUE
+81;Stationary plant and machine operators;Manual workers;TRUE
+82;Assemblers;Manual workers;TRUE
+93;Labourers in mining, construction, manufacturing and transport;Manual workers;TRUE
+91;Cleaners and helpers;Cleaning and sanitation workers;TRUE
+96;Refuse workers and other elementary workers Transport workers;Cleaning and sanitation workers;TRUE
+83;Drivers and mobile plant operators Technicians and clerical workers;Cleaning and sanitation workers;TRUE
+31;Science and engineering associate professionals;Cleaning and sanitation workers;TRUE
+44;Other clerical support workers;Cleaning and sanitation workers;TRUE
+51;Personal service workers;Cleaning and sanitation workers;TRUE
