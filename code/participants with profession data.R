@@ -1,7 +1,7 @@
 pacman::p_load(here)
 source(here("code","02_combine_datasets.R"))
 
-exp_st22 <- dat_st_22 |> select(codbar, profession.st_22, job_sector.st_22, years_of_service.st_22)
+exp_st22 <- dat_st_22 |> select(codbar, profession.st_22, job_sector.st_22, job_sector_other.st_22, supervision.st_22, years_of_service.st_22)
 exp_st23 <- dat_st_23 |> select(codbar, ew_professsion.st_23,job.st_23,years_of_service.st_23)
 exp_incl_kids <- incl_kids |> select(parent1_codbar, parent1_profession, parent1_occupation) |> 
   filter(!is.na(parent1_profession)) |>
@@ -10,7 +10,7 @@ exp_incl_kids <- incl_kids |> select(parent1_codbar, parent1_profession, parent1
   distinct() |> 
   group_by(parent1_codbar) |> filter(n() == 1) |> ungroup()
 
-exp_inc <- dat_inclusion |> select(codbar, work_pilote.inc, serocov_work.inc, profession.inc)
+exp_inc <- dat_inclusion |> select(codbar, work_pilote.inc, serocov_work.inc, profession.inc, profession_other.inc)
 
 # Combine to show which participants completed EITHER the st_22 or st_23 questionnaires
 dat_st_both <- full_join(exp_st22, exp_st23) |> mutate(filled_st = TRUE)
