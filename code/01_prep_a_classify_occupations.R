@@ -12,9 +12,11 @@ occ_labels <- readxl::read_xlsx(here("data", "do-e-00-isco08-01.xlsx"), # read i
   filter(!str_detect(Occupation_label, "armed forces|Armed forces")) # Remove armed services as their numbers cause weirdness and we don't have them in our dataset
 
 # Keep the variables that can be helpful for choosing how to assign ISCO-08 codes
-# (key free-text information is sometimes in the profession_other.inc, job_sector.st_22, job_sector_other.st_22 variables)
-occup <- dat_master_professions %>% 
-  select(master_profession, job_sector.st_22, supervision.st_22,
+# (key free-text information is sometimes in the master_profession, job_sector.st_22, job_sector_other.st_22 variables)
+occup <- dat_master_professions_2 %>% 
+  select(master_profession, profession_source, profession_other.inc, parent1_profession.inc_kids, 
+         parent1_occupation_other.inc_kids, profession.st_22,job.st_23, ew_professsion.st_23,
+         job_sector.st_22, supervision.st_22,
          job_sector_other.st_22,
          codbar) %>%
   # Make some changes to the free-text columns to make them easier to work with
@@ -40,28 +42,28 @@ occup_ISCO <- occup %>%
     # Services managers
     is.na(ISCO) & str_detect(supervision.st_22, "Oui, et") & str_detect(master_profession, "resource|ressource| rh | rh") ~ 1212,
     
-    is.na(ISCO) & (str_detect(profession.inc, "Chef-fe") | master_profession %in% c("directeur","directrice","cadre", "manager") | 
+    is.na(ISCO) & (str_detect(master_profession, "Chef-fe") | master_profession %in% c("directeur","directrice","cadre", "manager") | 
                      (str_detect(master_profession, "fonctionnai|emplo|responsa|direct") & str_detect(supervision.st_22, "Oui, et"))) &
       str_detect(job_sector.st_22, "Ambassade") ~ 111,
-    is.na(ISCO) & (str_detect(profession.inc, "Chef-fe") | master_profession %in% c("directeur","directrice","cadre", "manager") | 
+    is.na(ISCO) & (str_detect(master_profession, "Chef-fe") | master_profession %in% c("directeur","directrice","cadre", "manager") | 
                      (str_detect(master_profession, "fonctionnai|emplo|responsa|direct") & str_detect(supervision.st_22, "Oui, et"))) &
       str_detect(job_sector.st_22, "Administration publique") ~ 1112,
-    is.na(ISCO) & (str_detect(profession.inc, "Chef-fe") | master_profession %in% c("directeur","directrice","cadre", "manager") | 
+    is.na(ISCO) & (str_detect(master_profession, "Chef-fe") | master_profession %in% c("directeur","directrice","cadre", "manager") | 
                      (str_detect(master_profession, "fonctionnai|emplo|responsa|direct") & str_detect(supervision.st_22, "Oui, et"))) &
       str_detect(job_sector.st_22, "industrie|construction|production") ~ 132,
-    is.na(ISCO) & (str_detect(profession.inc, "Chef-fe") | master_profession %in% c("directeur","directrice","cadre", "manager") | 
+    is.na(ISCO) & (str_detect(master_profession, "Chef-fe") | master_profession %in% c("directeur","directrice","cadre", "manager") | 
                      (str_detect(master_profession, "fonctionnai|emplo|responsa|direct") & str_detect(supervision.st_22, "Oui, et"))) &
       str_detect(job_sector.st_22, "Information") ~ 133,
-    is.na(ISCO) & (str_detect(profession.inc, "Chef-fe") | master_profession %in% c("directeur","directrice","cadre", "manager") | 
+    is.na(ISCO) & (str_detect(master_profession, "Chef-fe") | master_profession %in% c("directeur","directrice","cadre", "manager") | 
                      (str_detect(master_profession, "fonctionnai|emplo|responsa|direct") & str_detect(supervision.st_22, "Oui, et"))) &
       str_detect(job_sector.st_22, "Enseignement|Santé|transports|Banques|Sécurité|comptabilité") ~ 134,
-    is.na(ISCO) & (str_detect(profession.inc, "Chef-fe") | master_profession %in% c("directeur","directrice","cadre", "manager") | 
+    is.na(ISCO) & (str_detect(master_profession, "Chef-fe") | master_profession %in% c("directeur","directrice","cadre", "manager") | 
                      (str_detect(master_profession, "fonctionnai|emplo|responsa|direct") & str_detect(supervision.st_22, "Oui, et"))) &
       str_detect(job_sector.st_22, "Hébergement") ~ 141,
-    is.na(ISCO) & (str_detect(profession.inc, "Chef-fe") | master_profession %in% c("directeur","directrice","cadre", "manager") | 
+    is.na(ISCO) & (str_detect(master_profession, "Chef-fe") | master_profession %in% c("directeur","directrice","cadre", "manager") | 
                      (str_detect(master_profession, "fonctionnai|emplo|responsa|direct") & str_detect(supervision.st_22, "Oui, et"))) &
       str_detect(job_sector.st_22, "Commerce") ~ 142,
-    is.na(ISCO) & (str_detect(profession.inc, "Chef-fe") | master_profession %in% c("directeur","directrice","cadre", "manager") | 
+    is.na(ISCO) & (str_detect(master_profession, "Chef-fe") | master_profession %in% c("directeur","directrice","cadre", "manager") | 
                      (str_detect(master_profession, "fonctionnai|emplo|responsa|direct") & str_detect(supervision.st_22, "Oui, et"))) &
       str_detect(job_sector.st_22, "Immobilier|Other|Arts") ~ 143,
     is.na(ISCO) & str_detect(master_profession, "ceo") ~ 112,
@@ -155,7 +157,7 @@ occup_ISCO <- occup %>%
     is.na(ISCO) & str_detect(supervision.st_22, "Oui, et") & str_detect(job_sector.st_22, "Sécurité") & str_detect(master_profession, "yoga teacher") ~ 3423,
     is.na(ISCO) & str_detect(supervision.st_22, "Oui, et") & str_detect(job_sector.st_22, "Sécurité") ~ 1349, # managers
     is.na(ISCO) & str_detect(job_sector.st_22, "Sécurité") & str_detect(master_profession, "polic|fonction|amb|sape|pomp|agent|securit|gard|-|gend|salar") ~ 541, # Other security
-    is.na(ISCO) & str_detect(job_sector.st_22, "Sécurité") & str_detect(profession_other.inc, "polic|fonction|amb|sape|pomp|agent|securit|gard|-|gend|salar") ~ 541, # Other security
+    is.na(ISCO) & str_detect(job_sector.st_22, "Sécurité") & str_detect(master_profession, "polic|fonction|amb|sape|pomp|agent|securit|gard|-|gend|salar") ~ 541, # Other security
     is.na(ISCO) & str_detect(master_profession, "policier|police|garde bain|gendarm|douanier") ~ 541, # Other security
     is.na(ISCO) & str_detect(master_profession, "agent") & str_detect(master_profession, "surete|securite") ~ 541, # Other security
     is.na(ISCO) & master_profession %in% c("enqueteur") ~ 335,
@@ -170,7 +172,7 @@ occup_ISCO <- occup %>%
     is.na(ISCO) & str_detect(master_profession, "assistant") & str_detect(master_profession, "administrative|direction|gestion|parlem|gesti|parl|execu|")  ~ 334,
     is.na(ISCO) & str_detect(master_profession, "adjoint|gestion") & str_detect(master_profession, "administr") ~ 334,
     is.na(ISCO) & str_detect(master_profession, "huiss") ~ 334,
-    is.na(ISCO) & !str_detect(profession.inc, "Cadre") & str_detect(master_profession, "secretaire|secretar|telephonist") ~ 412,
+    is.na(ISCO) & !str_detect(master_profession, "Cadre") & str_detect(master_profession, "secretaire|secretar|telephonist") ~ 412,
     is.na(ISCO) & master_profession == "assistant" | master_profession == "assistante" ~ 334,
     is.na(ISCO) & str_detect(master_profession, "reception") ~ 4226,
     is.na(ISCO) & str_detect(master_profession, "hotesse") & str_detect(master_profession, "accueil") ~ 4226,
@@ -207,9 +209,9 @@ occup_ISCO <- occup %>%
     
     
     # Greffier / Juristes
-    is.na(ISCO) & str_detect(master_profession, "greffier") | str_detect(profession_other.inc, "greffier") ~ 2619,
+    is.na(ISCO) & str_detect(master_profession, "greffier") | str_detect(master_profession, "greffier") ~ 2619,
     is.na(ISCO) & str_detect(master_profession, "jurist|avocat|jurid|juge|magistrat") ~ 261,
-    is.na(ISCO) & str_detect(profession_other.inc, "jurist|avocat|jurid|juge|magistrat") ~ 261,
+    is.na(ISCO) & str_detect(master_profession, "jurist|avocat|jurid|juge|magistrat") ~ 261,
     is.na(ISCO) & str_detect(master_profession, "compliance|conformite") ~ 2619,
     
     
@@ -272,7 +274,7 @@ occup_ISCO <- occup %>%
     
     # Architect
     is.na(ISCO) & str_detect(master_profession, "architect|urbanist") & !str_detect(master_profession, "informat") ~ 216,
-    is.na(ISCO) & str_detect(profession_other.inc, "architect|urbanist") ~ 216,
+    is.na(ISCO) & str_detect(master_profession, "architect|urbanist") ~ 216,
     
     is.na(ISCO) & str_detect(master_profession, "designer industriel") ~ 2163,
     is.na(ISCO) & str_detect(master_profession, "dessin") ~ 3118,
@@ -298,19 +300,19 @@ occup_ISCO <- occup %>%
     is.na(ISCO) & str_detect(master_profession, "qualit") ~ 7543,
     
     # Transport workers
-    is.na(ISCO) & (str_detect(master_profession, "conduct|chauffeur|chauffer") | str_detect(profession_other.inc, "conduct|chauffeur|chauffer")) &
-      (str_detect(master_profession, "bus|tram|tpg") | str_detect(profession_other.inc, "bus|tram|tpg")) ~ 8331,
+    is.na(ISCO) & (str_detect(master_profession, "conduct|chauffeur|chauffer") | str_detect(master_profession, "conduct|chauffeur|chauffer")) &
+      (str_detect(master_profession, "bus|tram|tpg") | str_detect(master_profession, "bus|tram|tpg")) ~ 8331,
     is.na(ISCO) & str_detect(master_profession, "pilot") & str_detect(master_profession, "locom") ~ 8311,
     is.na(ISCO) & str_detect(job_sector.st_22, "transports") & str_detect(master_profession, "regulate") ~ 8312,
     is.na(ISCO) & str_detect(master_profession, "conduct|chauffeur|conduczeur") ~ 832,
     is.na(ISCO) & str_detect(master_profession, "agent de train") ~ 5112,
     is.na(ISCO) & str_detect(master_profession, "pilot") & str_detect(master_profession, "ligne") ~ 3153,
     is.na(ISCO) & str_detect(master_profession, "control") & str_detect(master_profession, "air|aer") ~ 3154,
-    is.na(ISCO) & str_detect(profession_other.inc, "control") & str_detect(profession_other.inc, "air|aer") ~ 3154,
+    is.na(ISCO) & str_detect(master_profession, "control") & str_detect(master_profession, "air|aer") ~ 3154,
     is.na(ISCO) & str_detect(master_profession, "control") & str_detect(job_sector.st_22, "transport") ~ 5112,
-    is.na(ISCO) & str_detect(master_profession, "escale|aerop") | str_detect(profession_other.inc, "escale|arop") ~ 511,
+    is.na(ISCO) & str_detect(master_profession, "escale|aerop") | str_detect(master_profession, "escale|arop") ~ 511,
     is.na(ISCO) & str_detect(master_profession, "transitair") ~ 3331,
-    is.na(ISCO) & str_detect(profession_other.inc, "transitair") ~ 3331,
+    is.na(ISCO) & str_detect(master_profession, "transitair") ~ 3331,
     is.na(ISCO) & str_detect(job_sector.st_22, "transports") & str_detect(master_profession, "horaire") ~ 4323,
     is.na(ISCO) & str_detect(master_profession, "gestionnaire parc vehicule|responsable du parc de vehicule|gestionnaire de parc mobilite") ~ 9623, # or 1324, # fleet manager?
     is.na(ISCO) & str_detect(master_profession, "adjoint responsable reseau") ~ 2164,
@@ -368,15 +370,15 @@ occup_ISCO <- occup %>%
     
     
     # Postal worker / courier
-    is.na(ISCO) & str_detect(master_profession, "poste|posta") | str_detect(profession_other.inc, "poste|posta") ~ 4412,
+    is.na(ISCO) & str_detect(master_profession, "poste|posta") | str_detect(master_profession, "poste|posta") ~ 4412,
     is.na(ISCO) & str_detect(master_profession, "coursier") ~ 9331,
-    is.na(ISCO) & str_detect(profession_other.inc, "courrier") ~ 9331,
-    is.na(ISCO) & str_detect(profession_other.inc, "livreur|livreuse|bagagist") ~ 9621,
+    is.na(ISCO) & str_detect(master_profession, "courrier") ~ 9331,
+    is.na(ISCO) & str_detect(master_profession, "livreur|livreuse|bagagist") ~ 9621,
     is.na(ISCO) & str_detect(master_profession, "agent de distribution") ~ 4412,
     
     ## Fonctionnaire / employe
     is.na(ISCO) & str_detect(master_profession, "fonctionn|fonnctionn") & str_detect(master_profession, "international") ~ 1112, #diplomats?
-    is.na(ISCO) & str_detect(profession_other.inc, "fonctionn") & str_detect(profession_other.inc, "onu") ~ 1112, #diplomats?
+    is.na(ISCO) & str_detect(master_profession, "fonctionn") & str_detect(master_profession, "onu") ~ 1112, #diplomats?
     is.na(ISCO) & str_detect(master_profession, "diplomat") ~ 1112,
     is.na(ISCO) & (str_detect(master_profession, "fonction|emplo|aucune") | 
                      master_profession %in% c(".", "-", "n.a.", "na", "n/a", "--", "...", "xx", "xxx", "non", "rien")) &
@@ -520,23 +522,24 @@ occup_ISCO <- occup %>%
   arrange(desc(n), 
           # master_profession, 
           job_sector.st_22) #%>% 
-  # select(profession.inc, master_profession, profession_other.inc, ISCO, job_sector.st_22, supervision.st_22, n)  # remove this line once you've got it all done
+  # select(master_profession, master_profession, master_profession, ISCO, job_sector.st_22, supervision.st_22, n)  # remove this line once you've got it all done
 
-# Finalizing the file ####
-
-# In the final file, keep only the relevant columns that will be merged with our full dataset
-occup_ISCO_final <- occup_ISCO %>% select(codbar, ISCO) |> filter(ISCO != -999)
+# Indices ####
 
 # # Read teleworkability indices from locally saved file
-indices <- read_csv(here("data", "Initial datasets", "Telework ISCO indices.txt")) %>%     # read in the teleworkability indices (low "physical_interaction" = low teleworkability)
-  janitor::clean_names() %>% select(!occupation_title) %>% mutate(isco_3 = isco08) %>% select(-isco08)
+indices <- read_csv(here("data", "Telework ISCO indices.txt")) %>%     # read in the teleworkability indices (low "physical_interaction" = low teleworkability)
+  janitor::clean_names() %>% select(!occupation_title) %>% rename(isco_3 = isco08)
 # Read teleworkability indices from original source
 # indices <- read_csv("https://raw.githubusercontent.com/m-sostero/telework-occupations/master/Telework%20ISCO%20indices.csv") %>%     # read in directly from source GitHub page
 #   janitor::clean_names() %>% select(!occupation_title) %>% mutate(isco_3 = isco08) %>% select(-isco08)
 # Read in ISCO code occupation labels
-indices_2 <- read_xlsx(here("data", "Initial datasets", "EWCS 3 digit.xlsx")) %>% mutate(isco_3 = as.numeric(isco3d)) %>% select(isco_3,telework, physicalb)
+indices_2 <- read_xlsx(here("data", "EWCS 3 digit.xlsx")) %>% mutate(isco_3 = as.numeric(isco3d)) %>% select(isco_3,telework, physicalb)
 # Merge the indices with the ISCO labels
 indices <- left_join(indices, indices_2)
+
+# Finalizing the file ####
+# In the final file, keep only the relevant columns that will be merged with our full dataset
+occup_ISCO_final <- occup_ISCO %>% select(codbar, master_profession, ISCO) |> filter(ISCO != -999)
 
 # Read in the classified occupations data
 # (generated from "01_prep_a_classify occupations.R")
@@ -555,6 +558,8 @@ occup_ISCO_final <- left_join(occup_ISCO_final, occ_labels, by = c("isco_3" = "I
 occup_ISCO_final <- left_join(occup_ISCO_final, occ_labels, by = c("isco_2" = "ISCO")) %>% rename(Occupation_label_2 = Occupation_label)
 occup_ISCO_final <- left_join(occup_ISCO_final, occ_labels, by = c("isco_1" = "ISCO")) %>% rename(Occupation_label_1 = Occupation_label)
 
-# # Save the final dataset
-saveRDS(occup_ISCO_final, here("data","Generated datasets", "Classified_occupations.RDS"), ascii = TRUE)
+occup_ISCO_final <- occup_ISCO_final |> 
+  relocate(Occupation_label_full:Occupation_label_1, .after = master_profession)
 
+# # Save the final dataset
+saveRDS(occup_ISCO_final, here("data", "Classified_occupations.RDS"), ascii = TRUE)
