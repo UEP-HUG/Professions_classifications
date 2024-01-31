@@ -8,11 +8,16 @@ source(here("code","01_read_in_datasets.R"))
 ### ### ###
 # Select only variables of interest, to make minimal datasets ####
 ### ### ###
-## Inclusion - Parents ####
+## Inclusion - All ####
 dat_inclusion <- inclusion |> 
   select(codbar, age, serocov_work, work_pilote,  work_situation_rec_en, profession, profession_other,
-         occupation_cat_en,work_rata,  education, education_other, education_rec_en) |> 
+         occupation_cat_en, work_rata,  education, education_other, education_rec_en) |> 
   rename_with(~ paste(., "inc", sep = "."), !matches(c("codbar")))
+
+## Inclusion - KIDS ####  --> Still need to combine this into the master_specchio dataset
+dat_inc_kids <- inc_kids |> 
+  select(parent1_codbar, parent1_profession, parent1_occupation, parent1_occupation_other, parent1_occupation_cat) |> 
+  rename_with(~ paste(., "inc_kids", sep = "."), !matches(c("codbar")))
 
 ## General Health ####
 ### 2022 ####
@@ -22,7 +27,7 @@ dat_gh_22 <- gh_22 |>
 
 ### 2023 ####
 dat_gh_23 <- gh_23 |> 
-  select(codbar, age, events_job_loss, events_retirement,events_moving, events_other_text, d_psycho_professional_burnout, d_psycho_personnal_burnout) |> 
+  select(codbar, age, events_job_loss, events_retirement,events_moving, events_other_text, d_psycho_professional_burnout, d_psycho_personnal_burnout, ) |> 
   rename_with(~ paste(., "gh_23", sep = "."), !matches(c("codbar")))
 
 ## Sommeil ####
