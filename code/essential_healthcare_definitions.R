@@ -13,6 +13,7 @@ myflextable = function(data, ...) {
   return(x)
 }
 
+# source(here("code","01_prep_a_classify_occupations.R")) # can source this file if dataset not already created
 occup_ISCO_final <- readRDS(here("data", "Classified_occupations.rds"))
 key_occupations <- read_csv2(here("data", "key_occupations_ILO_ISCO2.csv"))
 
