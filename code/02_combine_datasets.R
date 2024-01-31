@@ -58,6 +58,11 @@ dat_st_23 <- st_23 |>
   rename_with(~ paste(., "st_23", sep = "."), !matches(c("codbar")))
 
 
+## WORK 2020 ####
+dat_work <- work |> 
+  select(codbar, sexe, annee_naissance, profession, date_soumission) |> 
+  rename_with(~ paste(., "WORK", sep = "."), !matches(c("codbar")))
+
 ### ### ###
 # Combine the timepoints into a Master dataset ####
 ### ### ###
@@ -81,6 +86,10 @@ dat_master_specchio <- left_join(dat_master_specchio, dat_hb_22,
 
 ## Join with Sante Travail 2022 ####
 dat_master_specchio <- left_join(dat_master_specchio, dat_st_22, 
+                                 by = "codbar")
+
+## Join with WORK 2020 ####
+dat_master_specchio <- left_join(dat_master_specchio, dat_work, 
                                  by = "codbar")
 
 ### ### ###

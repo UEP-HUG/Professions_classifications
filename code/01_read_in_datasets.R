@@ -1,7 +1,7 @@
 pacman::p_load(
   tidyverse,
   here
-)
+  )
 
 # Read in datasets ####
 
@@ -86,6 +86,14 @@ st_23 <- readRDS("P:/ODS/DMCPRU/UEPDATA/Pour_user/Pour_Anshu/santé_travail_11_2
   mutate(
     date_soumission = as_date(date_soumission),
     age = time_length(date_soumission - birthdate, "years"))
+
+## WORK 2020 ####
+work <- read_csv("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Base_de_données/classification_jobs_anup_jan_2024/SEROCoV-WORK_WP1_database_metiers_mzab4anup_2024.01.31.csv", locale = readr::locale(encoding = "latin1")) |> 
+  mutate(
+    date_soumission = as_date(mdy(date_du_rdv)),
+    codbar = as.character(codbar)) |> 
+  select(codbar, sexe, annee_naissance, profession, date_soumission)
+
 
 # ## Monthly questionnaires ####
 # monthly <- readRDS("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Bases_for_sharing/2021-05-19-1212_readable_dat_2021.05.19_monthly_V3.rds") |> 

@@ -1,6 +1,7 @@
 pacman::p_load(here)
 source(here("code","02_combine_datasets.R"))
 
+exp_work <- dat_work
 exp_st22 <- dat_st_22 |> select(codbar, profession.st_22, job_sector.st_22, job_sector_other.st_22, supervision.st_22, years_of_service.st_22)
 exp_st23 <- dat_st_23 |> select(codbar, ew_professsion.st_23,job.st_23,years_of_service.st_23)
 exp_inc_kids <- dat_inc_kids |> select(parent1_codbar, parent1_profession.inc_kids, 
@@ -21,6 +22,8 @@ dat_st_both <- full_join(exp_st22, exp_st23) |> mutate(filled_st = TRUE)
 dat_master_professions <- left_join(exp_inc, dat_st_both)
 # Merge with incl_kids
 dat_master_professions <- left_join(dat_master_professions, exp_inc_kids, by = join_by("codbar" == "parent1_codbar"))
+# Merge with WORK
+dat_master_professions <- left_join(dat_master_professions, exp_work)
 
 # Add a variable to show if participant completed any st questionnaire OR participated in Sero-Cov-WORK OR completed KIDS inclusion
 dat_master_professions <- dat_master_professions |> 
@@ -28,7 +31,7 @@ dat_master_professions <- dat_master_professions |>
                                .default = filled_st),
          filled_inc_kids = case_when(is.na(filled_inc_kids) ~ FALSE,
                                      .default = filled_inc_kids),
-         work_OR_st_OR_incKIDS = work_pilote.inc | serocov_work.inc | filled_st |filled_inc_kids) |> 
+         work_OR_st_OR_incKIDS = work_pilote.inc | serocov_work.inc | filled_st |filled_inc_kids | !is.na(date_soumission.WORK)) |> 
   filter(work_OR_st_OR_incKIDS == TRUE) # 7,156 participants with free-text profession information
 
 
@@ -41,6 +44,8 @@ dat_master_professions <- dat_master_professions |>
 dat_master_professions_2 <- dat_master_professions |> 
   mutate(
     master_profession = NA, # Initialize an empty variable that will be filled up
+    master_profession = case_when(is.na(master_profession) & !is.na(profession.WORK) 
+                                  ~ paste0(profession.WORK,"^Work"), .default = master_profession),
     master_profession = case_when(is.na(master_profession) & !is.na(profession_other.inc) 
                                   ~ paste0(profession_other.inc,"^inc"), .default = master_profession),
     master_profession = case_when(is.na(master_profession) & !is.na(parent1_profession.inc_kids) 
