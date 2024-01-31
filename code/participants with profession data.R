@@ -3,8 +3,9 @@ source(here("code","02_combine_datasets.R"))
 
 exp_st22 <- dat_st_22 |> select(codbar, profession.st_22, job_sector.st_22, job_sector_other.st_22, supervision.st_22, years_of_service.st_22)
 exp_st23 <- dat_st_23 |> select(codbar, ew_professsion.st_23,job.st_23,years_of_service.st_23)
-exp_incl_kids <- incl_kids |> select(parent1_codbar, parent1_profession, parent1_occupation) |> 
-  filter(!is.na(parent1_profession)) |>
+exp_inc_kids <- dat_inc_kids |> select(parent1_codbar, parent1_profession.inc_kids, 
+                                         parent1_occupation.inc_kids, parent1_occupation_other.inc_kids, parent1_occupation_cat.inc_kids) |> 
+  filter(!is.na(parent1_profession.inc_kids)) |>
   mutate(filled_inc_kids = TRUE) |> 
   arrange(parent1_codbar) |> 
   distinct() |> 
@@ -19,7 +20,7 @@ dat_st_both <- full_join(exp_st22, exp_st23) |> mutate(filled_st = TRUE)
 # Merge st_both with inclusion 
 dat_master_professions <- left_join(exp_inc, dat_st_both)
 # Merge with incl_kids
-dat_master_professions <- left_join(dat_master_professions, exp_incl_kids, by = join_by("codbar" == "parent1_codbar"))
+dat_master_professions <- left_join(dat_master_professions, exp_inc_kids, by = join_by("codbar" == "parent1_codbar"))
 
 # Add a variable to show if participant completed any st questionnaire OR participated in Sero-Cov-WORK OR completed KIDS inclusion
 dat_master_professions <- dat_master_professions |> 
@@ -36,7 +37,25 @@ dat_master_professions <- dat_master_professions |>
 # gh_merge <- inner_join(dat_gh_22, dat_gh_23)
 # both_gh_master_merge <- inner_join(gh_merge, dat_master_professions)
 
+# Fill in the master_profession variable with profession data from different datasets, prioritizing the first occupation entry (closer to the pandemic)
+dat_master_professions_2 <- dat_master_professions |> 
+  mutate(
+    master_profession = NA, # Initialize an empty variable that will be filled up
+    master_profession = case_when(is.na(master_profession) & !is.na(profession_other.inc) ~ paste0(profession_other.inc,"^inc"), .default = master_profession),
+    master_profession = case_when(is.na(master_profession) & !is.na(parent1_profession.inc_kids) ~ paste0(parent1_profession.inc_kids,"^inc_kids"), .default = master_profession),
+    master_profession = case_when(is.na(master_profession) & !is.na(parent1_occupation_other.inc_kids) ~ paste0(parent1_occupation_other.inc_kids,"^inc_kids"), .default = master_profession),
+    master_profession = case_when(is.na(master_profession) & !is.na(profession.st_22) ~ paste0(profession.st_22,"^st_22"), .default = master_profession),
+    master_profession = case_when(is.na(master_profession) & !is.na(job.st_23) ~ paste0(job.st_23,"^st_23"), .default = master_profession),
+    master_profession = case_when(is.na(master_profession) & !is.na(ew_professsion.st_23) ~ paste0(ew_professsion.st_23,"^st_23"), .default = master_profession)
+  ) |> 
+  separate_wider_delim(master_profession, delim = "^", names = c("master_profession", "profession_source")) |> 
+  # arrange the variables according to which ones will be referred to first
+  relocate(c(master_profession,profession_source,parent1_profession.inc_kids, parent1_occupation_other.inc_kids, profession_other.inc, 
+             profession.st_22,job.st_23, ew_professsion.st_23), .after = serocov_work.inc)
+
+# a <- dat_master_professions |> select(profession.st_22) |> mutate(alpha = str_detect(profession.st_22, "\\^")) |> filter(alpha)
+
 ### ### ###
 # Keep only Master Dataset ####
 ### ### ###
-rm(list=setdiff(ls(), c("dat_master_specchio", "dat_master_professions")))
+rm(list=setdiff(ls(), c("dat_master_specchio", "dat_master_professions", "dat_master_professions_2")))
