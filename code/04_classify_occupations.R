@@ -90,7 +90,7 @@ occup_ISCO <- occup %>%
     
     
     # Care workers
-    is.na(ISCO) & str_detect(master_profession, "aide") & str_detect(master_profession, "domic|soig|soin") ~ 532,
+    is.na(ISCO) & str_detect(master_profession, "aid") & str_detect(master_profession, "domic|soig|soin") ~ 532,
     is.na(ISCO) & str_detect(master_profession, "assc|ambulan|a.s.s.c.|soins ems|chauffeur bls aed|opticien|employee ems|asam iepa") ~ 325,
     
     is.na(ISCO) & str_detect(job_sector.st_22, "Santé") & str_detect(master_profession, "assistant") & str_detect(master_profession, "medic|dent|soins|soci") ~ 325,
@@ -100,6 +100,7 @@ occup_ISCO <- occup %>%
     is.na(ISCO) & str_detect(job_sector.st_22, "Santé") & str_detect(master_profession, "social|educat|curat") ~ 2635,
     is.na(ISCO) & str_detect(job_sector.st_22, "Santé") & str_detect(master_profession, "accompagn") ~ 3221,
     is.na(ISCO) & str_detect(job_sector.st_22, "Santé") & str_detect(master_profession, "animat|socioprof|socioc|fonctionnaire a imad") ~ 3412,
+    is.na(ISCO) & str_detect(master_profession, "animat") & str_detect(master_profession, "socio") ~ 3412,
     is.na(ISCO) & str_detect(job_sector.st_22, "Santé") & master_profession %in% c("ais") ~ 3412,
     is.na(ISCO) & str_detect(master_profession, "responsable animation") ~ 3412,
     is.na(ISCO) & str_detect(master_profession, "insertion") ~ 3412,
@@ -125,6 +126,7 @@ occup_ISCO <- occup %>%
     # Childcare
     is.na(ISCO) & str_detect(supervision.st_22, "Oui, et") & str_detect(job_sector.st_22, "Petite enfance") & !str_detect(master_profession, "policier") ~ 1341,
     is.na(ISCO) & str_detect(job_sector.st_22, "Petite enfance") & str_detect(master_profession, "educat|anima") ~ 5311,
+    is.na(ISCO) & str_detect(master_profession, "animat") & str_detect(master_profession, "parascolaire|perascolaire") ~ 5311,
     is.na(ISCO) & str_detect(master_profession, "educatrice petite enfance|petite enfance") ~ 5311,
     is.na(ISCO) & str_detect(job_sector.st_22, "Enseignement") & str_detect(master_profession, "primaire") ~ 2341,
     # Other teaching professionals
@@ -156,9 +158,10 @@ occup_ISCO <- occup %>%
     is.na(ISCO) & str_detect(supervision.st_22, "Oui, et") & str_detect(job_sector.st_22, "Sécurité") & str_detect(master_profession, "yoga teacher") ~ 3423,
     is.na(ISCO) & str_detect(supervision.st_22, "Oui, et") & str_detect(job_sector.st_22, "Sécurité") ~ 1349, # managers
     is.na(ISCO) & str_detect(job_sector.st_22, "Sécurité") & str_detect(master_profession, "polic|fonction|amb|sape|pomp|agent|securit|gard|-|gend|salar") ~ 541, # Other security
+    is.na(ISCO) & str_detect(master_profession, "asp2|asp 2|assistante de securite publique") ~ 5412,
     is.na(ISCO) & str_detect(job_sector.st_22, "Sécurité") & str_detect(master_profession, "polic|fonction|amb|sape|pomp|agent|securit|gard|-|gend|salar") ~ 541, # Other security
     is.na(ISCO) & str_detect(master_profession, "policier|police|garde bain|gendarm|douanier") ~ 541, # Other security
-    is.na(ISCO) & str_detect(master_profession, "agent") & str_detect(master_profession, "surete|securite") ~ 541, # Other security
+    is.na(ISCO) & str_detect(master_profession, "agent") & str_detect(master_profession, "surete|securite|surve") ~ 541, # Other security
     is.na(ISCO) & master_profession %in% c("enqueteur") ~ 335,
     is.na(ISCO) & str_detect(master_profession, "pompier") ~ 541,
     
@@ -170,6 +173,7 @@ occup_ISCO <- occup %>%
     is.na(ISCO) & str_detect(master_profession, "secretaire|secretar") & str_detect(master_profession, "medic|pharma|denta")  ~ 3344,
     is.na(ISCO) & str_detect(master_profession, "assistant") & str_detect(master_profession, "administrative|direction|gestion|parlem|gesti|parl|execu|")  ~ 334,
     is.na(ISCO) & str_detect(master_profession, "adjoint|gestion") & str_detect(master_profession, "administr") ~ 334,
+    is.na(ISCO) & str_detect(master_profession, "adjoint") & str_detect(master_profession, "direct") ~ 334,
     is.na(ISCO) & str_detect(master_profession, "huiss") ~ 334,
     is.na(ISCO) & !str_detect(master_profession, "Cadre") & str_detect(master_profession, "secretaire|secretar|telephonist") ~ 412,
     is.na(ISCO) & master_profession == "assistant" | master_profession == "assistante" ~ 334,
@@ -195,6 +199,7 @@ occup_ISCO <- occup %>%
     is.na(ISCO) & str_detect(master_profession, "dietet") ~ 2265,
     is.na(ISCO) & str_detect(master_profession, "logoped") ~ 2266,
     is.na(ISCO) & str_detect(master_profession, "audiol|optom|ergother") ~ 226,
+    is.na(ISCO) & str_detect(master_profession, "acupun") ~ 223,
     is.na(ISCO) & str_detect(master_profession, "physio") ~ 2264,
     # Psychologists / therapists / other
     is.na(ISCO) & str_detect(master_profession, "radiotherap") ~ 3211,
@@ -358,6 +363,7 @@ occup_ISCO <- occup %>%
     
     # Gardener / agriculture
     is.na(ISCO) & str_detect(master_profession, "jardinier|horticult|viti|vigner") ~ 611,
+    is.na(ISCO) & str_detect(master_profession, "agriculteur|agricultrice") ~ 613,
     is.na(ISCO) & str_detect(master_profession, "ouvrier agricole") ~ 921,
     is.na(ISCO) & str_detect(master_profession, "oenologue") ~ 2132,
     is.na(ISCO) & str_detect(master_profession, "cavist") ~ 816,
@@ -415,7 +421,7 @@ occup_ISCO <- occup %>%
     is.na(ISCO) & str_detect(master_profession, "merchandiser") ~ 524,
     is.na(ISCO) & str_detect(master_profession, "commerce|vent|agent|fonction|responsabl|magasin") & str_detect(job_sector.st_22, "Commerce") ~ 524,
     is.na(ISCO) & str_detect(master_profession, "marketing manager") ~ 242,
-    is.na(ISCO) & str_detect(master_profession, "achat|achet") ~ 3323,
+    is.na(ISCO) & str_detect(master_profession, "achat|achet|acgeteuse") ~ 3323,
     is.na(ISCO) & str_detect(master_profession, "courtier") ~ 3324,
     is.na(ISCO) & str_detect(master_profession, "caiss") ~ 523,
     is.na(ISCO) & str_detect(master_profession, "sales|vent") ~ 243,
@@ -457,6 +463,7 @@ occup_ISCO <- occup %>%
     
     # Other childcare
     is.na(ISCO) & str_detect(job_sector.st_22, "Petite enfance") ~ 531,
+    is.na(ISCO) & str_detect(job_sector.st_22, "accueillante familiale|accueil familiale") ~ 5311,
     
     # Performing artists
     is.na(ISCO) & str_detect(master_profession, "pianist|music|musiq|orchest|opera|comedien|comdedien|chorist") ~ 265,
@@ -509,17 +516,18 @@ occup_ISCO <- occup %>%
   select(-n) %>% 
   # filter(
   #   !is.na(Occupation_label)
-  #                       , !ISCO %in% c(9999)
+  # #                       , !ISCO %in% c(9999)
   #                       ) %>%      # Remove rows with unassigned ISCO codes, to work on what's left
   mutate(ISCO = case_when(is.na(ISCO) ~ -999, 
                                       .default = ISCO)
          ) %>% 
   add_count(
-    job_sector.st_22,
-    # master_profession, 
+    # job_sector.st_22,
+    master_profession,
     sort = FALSE) %>% 
-  arrange(desc(n), 
-          # master_profession, 
+  arrange(
+          master_profession,
+          # desc(n),
           job_sector.st_22) #%>% 
   # select(master_profession, master_profession, master_profession, ISCO, job_sector.st_22, supervision.st_22, n)  # remove this line once you've got it all done
 
@@ -561,7 +569,7 @@ occup_ISCO_final <- left_join(occup_ISCO_final, occ_labels, by = c("isco_2" = "I
 occup_ISCO_final <- left_join(occup_ISCO_final, occ_labels, by = c("isco_1" = "ISCO")) %>% rename(Occupation_label_1 = Occupation_label)
 
 occup_ISCO_final <- occup_ISCO_final |> 
-  relocate(Occupation_label_full:Occupation_label_1, .after = profession_source) #|> filter(ISCO != -999)
+  relocate(Occupation_label_full:Occupation_label_1, .after = profession_source) #|> filter(isco_full != -999)
 
 # # Save the final dataset
 saveRDS(occup_ISCO_final, here("data", "Classified_occupations.RDS"), ascii = TRUE)
