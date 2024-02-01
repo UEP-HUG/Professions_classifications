@@ -16,7 +16,8 @@ merged <- left_join(occup_ISCO_final, key_occupations, by = join_by("isco_2" == 
   mutate(key_occupation = case_when(key_occupation ~ TRUE, .default = FALSE),
          serocov_work.inc = case_when(serocov_work.inc ~ "Yes", .default = "No"), # recode as Yes / No
          health_workers = case_when(occupational_grouping == "Health workers" ~ TRUE, .default = FALSE)
-  )
+  ) |> 
+  filter(isco_full != -999)
 
 # Summaries ####
 # define standard myflextable function 
