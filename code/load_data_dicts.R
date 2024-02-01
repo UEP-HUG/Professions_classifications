@@ -1,3 +1,5 @@
+# Just a file to search through the data dictionaries for variable names or specific words in the questions
+
 pacman::p_load(
   tidyverse,
   data.table,
