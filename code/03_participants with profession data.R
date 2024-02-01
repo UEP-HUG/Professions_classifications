@@ -44,8 +44,8 @@ dat_master_professions <- dat_master_professions |>
 dat_master_professions_2 <- dat_master_professions |> 
   mutate(
     master_profession = NA, # Initialize an empty variable that will be filled up
-    master_profession = case_when(is.na(master_profession) & !is.na(profession.WORK) 
-                                  ~ paste0(profession.WORK,"^Work"), .default = master_profession),
+    master_profession = case_when(is.na(master_profession) & !is.na(profession.WORK) # the !is.na here is to only use non-empty fields
+                                  ~ paste0(profession.WORK,"^Work"), .default = master_profession), #^Work here allows later ID of source dataset
     master_profession = case_when(is.na(master_profession) & !is.na(profession_other.inc) 
                                   ~ paste0(profession_other.inc,"^inc"), .default = master_profession),
     master_profession = case_when(is.na(master_profession) & !is.na(parent1_profession.inc_kids) 
@@ -53,19 +53,18 @@ dat_master_professions_2 <- dat_master_professions |>
     master_profession = case_when(is.na(master_profession) & !is.na(parent1_occupation_other.inc_kids) 
                                   ~ paste0(parent1_occupation_other.inc_kids,"^inc_kids"), .default = master_profession),
     master_profession = case_when(is.na(master_profession) & !is.na(profession.st_22) 
-                                  & !profession.st_22 %in% c("-", "--", "---", ".", "...", "/", "///", "::::", "?")  
+                                  & !profession.st_22 %in% c("-", "--", "---", ".", "...", "/", "///", "::::", "?") # No information, skip to next variable
                                   ~ paste0(profession.st_22,"^st_22"), .default = master_profession),
     master_profession = case_when(is.na(master_profession) & !is.na(job.st_23) 
                                   ~ paste0(job.st_23,"^st_23"), .default = master_profession),
     master_profession = case_when(is.na(master_profession) & !is.na(ew_professsion.st_23) 
                                   ~ paste0(ew_professsion.st_23,"^st_23"), .default = master_profession)
   ) |> 
+  # Use the ^ symbol to separate into profession and dataset source columns
   separate_wider_delim(master_profession, delim = "^", names = c("master_profession", "profession_source")) |> 
   # arrange the variables according to which ones will be referred to first
   relocate(c(master_profession,profession_source, profession.WORK, profession_other.inc, parent1_profession.inc_kids, parent1_occupation_other.inc_kids, 
              profession.st_22,job.st_23, ew_professsion.st_23), .after = serocov_work.inc)
-
-# a <- dat_master_professions |> select(profession.st_22) |> mutate(alpha = str_detect(profession.st_22, "\\^")) |> filter(alpha)
 
 ### ### ###
 # Keep only Master Dataset ####
