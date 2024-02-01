@@ -17,7 +17,7 @@ occup <- dat_master_professions_2 %>%
   select(master_profession, profession_source, profession_other.inc, parent1_profession.inc_kids, 
          parent1_occupation_other.inc_kids, profession.st_22,job.st_23, ew_professsion.st_23,
          job_sector.st_22, supervision.st_22,
-         job_sector_other.st_22, serocov_work.inc, work_pilote.inc,
+         job_sector_other.st_22, serocov_work.inc,
          codbar) %>%
   # Make some changes to the free-text columns to make them easier to work with
   # (Convert accent characters, e.g. "é" to "e", convert all capital letters to small letters)
@@ -79,7 +79,7 @@ occup_ISCO <- occup %>%
     is.na(ISCO) & str_detect(job_sector_other.st_22, "administration et ressources humaines") ~ 242,
     
     
-    # Health managers
+    # Health managers !! MAY NEED TO EITHER INCLUDE 1342 IN "key_occupations" FILE OR RECODE THESE !!
     is.na(ISCO) & str_detect(supervision.st_22, "Oui, et") & str_detect(master_profession, "infir|medecin|pharma") ~ 1342,
     is.na(ISCO) & str_detect(master_profession, "cadre de sante|directrice d'iepa") ~ 1342,
     
@@ -539,7 +539,7 @@ indices <- left_join(indices, indices_2)
 
 # Finalizing the file ####
 # In the final file, keep only the relevant columns that will be merged with our full dataset
-occup_ISCO_final <- occup_ISCO %>% select(codbar, master_profession, profession_source, serocov_work.inc, work_pilote.inc, ISCO) |> filter(ISCO != -999)
+occup_ISCO_final <- occup_ISCO %>% select(codbar, master_profession, profession_source, serocov_work.inc, ISCO) |> filter(ISCO != -999)
 
 # Read in the classified occupations data
 # (generated from "01_prep_a_classify occupations.R")
