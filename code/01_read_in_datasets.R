@@ -110,7 +110,8 @@ work <- read_csv("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Base_de_donnée
     poste = case_when(is.na(poste_2) ~ poste_v2, .default = poste_2)
     ) |> 
   left_join(work_dict_poste) |> 
-  left_join(work_dict_sector)
+  left_join(work_dict_sector) |> 
+  arrange(profession)
   # select(codbar, sexe, annee_naissance, profession, date_soumission)
 
 rm(work_dict_poste, work_dict_sector) # remove these intermediate files
