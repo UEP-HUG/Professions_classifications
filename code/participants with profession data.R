@@ -12,7 +12,7 @@ exp_inc_kids <- dat_inc_kids |> select(parent1_codbar, parent1_profession.inc_ki
   distinct() |> 
   group_by(parent1_codbar) |> filter(n() == 1) |> ungroup()
 
-exp_inc <- dat_inclusion |> select(codbar, work_pilote.inc, serocov_work.inc, profession.inc, profession_other.inc)
+exp_inc <- dat_inclusion |> select(codbar, serocov_work.inc, profession.inc, profession_other.inc)
 
 # Combine to show which participants completed EITHER the st_22 or st_23 questionnaires
 dat_st_both <- full_join(exp_st22, exp_st23) |> mutate(filled_st = TRUE)
@@ -31,7 +31,7 @@ dat_master_professions <- dat_master_professions |>
                                .default = filled_st),
          filled_inc_kids = case_when(is.na(filled_inc_kids) ~ FALSE,
                                      .default = filled_inc_kids),
-         work_OR_st_OR_incKIDS = work_pilote.inc | serocov_work.inc | filled_st |filled_inc_kids | !is.na(date_soumission.WORK)) |> 
+         work_OR_st_OR_incKIDS =  serocov_work.inc | filled_st |filled_inc_kids | !is.na(date_soumission.WORK)) |> 
   filter(work_OR_st_OR_incKIDS == TRUE) # 7,156 participants with free-text profession information
 
 
@@ -62,7 +62,7 @@ dat_master_professions_2 <- dat_master_professions |>
   ) |> 
   separate_wider_delim(master_profession, delim = "^", names = c("master_profession", "profession_source")) |> 
   # arrange the variables according to which ones will be referred to first
-  relocate(c(master_profession,profession_source, profession_other.inc, parent1_profession.inc_kids, parent1_occupation_other.inc_kids, 
+  relocate(c(master_profession,profession_source, profession.WORK, profession_other.inc, parent1_profession.inc_kids, parent1_occupation_other.inc_kids, 
              profession.st_22,job.st_23, ew_professsion.st_23), .after = serocov_work.inc)
 
 # a <- dat_master_professions |> select(profession.st_22) |> mutate(alpha = str_detect(profession.st_22, "\\^")) |> filter(alpha)
