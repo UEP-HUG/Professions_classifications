@@ -5,7 +5,7 @@ pacman::p_load(    # Installs / loads packages if they are not already installed
   stringi       # String manipulation
 )
 
-source(here("code","participants with profession data.R"))
+source(here("code","03_participants with profession data.R"))
 
 occ_labels <- readxl::read_xlsx(here("data", "do-e-00-isco08-01.xlsx"), # read in occupation titles based on ISCO code
                                 sheet = "ISCO-08 English version") %>% drop_na() %>% mutate(ISCO = as.numeric(ISCO)) %>% 
@@ -14,10 +14,10 @@ occ_labels <- readxl::read_xlsx(here("data", "do-e-00-isco08-01.xlsx"), # read i
 # Keep the variables that can be helpful for choosing how to assign ISCO-08 codes
 # (key free-text information is sometimes in the master_profession, job_sector.st_22, job_sector_other.st_22 variables)
 occup <- dat_master_professions_2 %>% 
-  select(master_profession, profession_source, profession_other.inc, parent1_profession.inc_kids, 
+  select(master_profession, profession_source, profession.WORK, profession_other.inc, parent1_profession.inc_kids, 
          parent1_occupation_other.inc_kids, profession.st_22,job.st_23, ew_professsion.st_23,
          job_sector.st_22, supervision.st_22,
-         job_sector_other.st_22, serocov_work.inc,
+         job_sector_other.st_22, Occupation.WORK, Sector.WORK,serocov_work.inc,
          codbar) %>%
   # Make some changes to the free-text columns to make them easier to work with
   # (Convert accent characters, e.g. "é" to "e", convert all capital letters to small letters)
@@ -86,7 +86,7 @@ occup_ISCO <- occup %>%
     # Nurses
     is.na(ISCO) & str_detect(master_profession, "infi|sage femme|sage-femme") ~ 222,
     # Doctors
-    is.na(ISCO) & str_detect(master_profession, "medecin") ~ 221,
+    is.na(ISCO) & str_detect(master_profession, "medecin|psychiat") ~ 221,
     
     
     # Care workers
@@ -103,8 +103,7 @@ occup_ISCO <- occup %>%
     is.na(ISCO) & str_detect(job_sector.st_22, "Santé") & master_profession %in% c("ais") ~ 3412,
     is.na(ISCO) & str_detect(master_profession, "responsable animation") ~ 3412,
     is.na(ISCO) & str_detect(master_profession, "insertion") ~ 3412,
-    is.na(ISCO) & str_detect(job_sector.st_22, "Santé") & master_profession %in% c("ase", "a$e") ~ 2635,
-    is.na(ISCO) & str_detect(job_sector.st_22, "Petite enfance") & master_profession %in% c("ase", "a$e") ~ 2635,
+    is.na(ISCO) & master_profession %in% c("ase", "a$e", "a.s.e", "a.s.e.", "assistane socio-educative") ~ 2635,
     is.na(ISCO) & master_profession %in% c("maitre de readaptation") ~ 2263,
     is.na(ISCO) & str_detect(master_profession, "orthoptiste") ~ 2267,
     is.na(ISCO) & str_detect(master_profession, "sociolog|anthropolog|archeolog") ~ 2632,
@@ -189,7 +188,7 @@ occup_ISCO <- occup %>%
     
     
     # Other health professionals
-    is.na(ISCO) & str_detect(supervision.st_22, "Oui, et") & str_detect(master_profession, "dentist|dentaire|pharma|dietet|audiol|optom|ergother|physio") ~ 134,
+    is.na(ISCO) & str_detect(supervision.st_22, "Oui, et") & str_detect(master_profession, "dentist|dentaire|pharma|dietet|audiol|optom|ergother|physio") ~ 134, # !! NEED TO RETHINK THIS ONE AS WELL !!
     is.na(ISCO) & str_detect(master_profession, "dentist|dentaire") ~ 2261,
     is.na(ISCO) & str_detect(master_profession, "pharma|drogu") ~ 2262,
     is.na(ISCO) & str_detect(job_sector.st_22, "Santé") & str_detect(master_profession, "preparatrice") ~ 3213,
@@ -539,7 +538,10 @@ indices <- left_join(indices, indices_2)
 
 # Finalizing the file ####
 # In the final file, keep only the relevant columns that will be merged with our full dataset
-occup_ISCO_final <- occup_ISCO %>% select(codbar, master_profession, profession_source, serocov_work.inc, ISCO) |> filter(ISCO != -999)
+occup_ISCO_final <- occup_ISCO %>% select(codbar, master_profession, profession_source, 
+                                          Occupation.WORK, Sector.WORK,
+                                          profession.WORK:job_sector_other.st_22,
+                                          serocov_work.inc, ISCO)
 
 # Read in the classified occupations data
 # (generated from "01_prep_a_classify occupations.R")
@@ -559,7 +561,12 @@ occup_ISCO_final <- left_join(occup_ISCO_final, occ_labels, by = c("isco_2" = "I
 occup_ISCO_final <- left_join(occup_ISCO_final, occ_labels, by = c("isco_1" = "ISCO")) %>% rename(Occupation_label_1 = Occupation_label)
 
 occup_ISCO_final <- occup_ISCO_final |> 
-  relocate(Occupation_label_full:Occupation_label_1, .after = master_profession)
+  relocate(Occupation_label_full:Occupation_label_1, .after = profession_source) #|> filter(ISCO != -999)
 
 # # Save the final dataset
 saveRDS(occup_ISCO_final, here("data", "Classified_occupations.RDS"), ascii = TRUE)
+
+# # Delete intermediate objects ####
+# rm(
+#   occup, occ_labels, indices, indices_2
+# )
