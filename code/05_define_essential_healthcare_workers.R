@@ -5,7 +5,7 @@ pacman::p_load(
 )
 
 # Input data ####
-source(here("code","01_prep_a_classify_occupations.R")) # can source this file if dataset not already created
+source(here("code","04_classify_occupations.R")) # can source this file if dataset not already created
 # occup_ISCO_final <- readRDS(here("data", "Classified_occupations.rds"))
 
 # Key occupations indices from ILO paper (Berg et al., 2023)
