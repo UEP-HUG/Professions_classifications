@@ -8,7 +8,10 @@ pacman::p_load(
 ## Inclusion ####
 ### All ####
 inclusion <- readRDS("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Bases_for_sharing/2023-10-11-1616_ALLincsVs012345_ALLparticipants.rds") |> 
+  # Remove the V5_inclusion people, as these are bus_santé people and there are some duplicates
   filter(Origin != "V5_inclusion") |>
+  # Filter for only participants in one of the relevant studies
+  filter(serocov_pop | pop_pilote | serocov_schools | serocov_kids | serocov_work | sp2_novdec_2020 | sp3_juin_2021 | sp4_avril_2022) |> 
   filter(!testeur) |>  # remove data produced by testers - I think Nick already did this
   filter(!str_starts(codbar, "T"))  |>  # Remove any people with codbar beginning with T (also testers)
   mutate(
@@ -88,12 +91,29 @@ st_23 <- readRDS("P:/ODS/DMCPRU/UEPDATA/Pour_user/Pour_Anshu/santé_travail_11_2
     age = time_length(date_soumission - birthdate, "years"))
 
 ## WORK 2020 ####
+### Data dictionary ####
+work_dict_poste <- read_xlsx("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Base_de_données/classification_jobs_anup_jan_2024/Data_dict_WORK_final_anonym.xlsx", 
+                  sheet = "Feuil3", skip = 1) |> 
+  mutate(poste = row_number()-1) |> select(-N) |> 
+  add_row(Occupation = "Other", `Description of jobs` = "Other", poste = 99) # Add row of Other
+
+work_dict_sector <- read_xlsx("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Base_de_données/classification_jobs_anup_jan_2024/Data_dict_WORK_final_anonym.xlsx", 
+                             sheet = "Feuil4", skip = 1) |> 
+  mutate(sect_activite = row_number()) |> select(-`Participating institutions/facilities`) |> 
+  add_row(Sector = "Other", Description = "Other", sect_activite = 99) # Add row of other
+  
+### Dataset ####
 work <- read_csv("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Base_de_données/classification_jobs_anup_jan_2024/SEROCoV-WORK_WP1_database_metiers_mzab4anup_2024.01.31.csv", locale = readr::locale(encoding = "latin1")) |> 
   mutate(
     date_soumission = as_date(mdy(date_du_rdv)),
-    codbar = as.character(codbar)) |> 
-  select(codbar, sexe, annee_naissance, profession, date_soumission)
+    codbar = as.character(codbar),
+    poste = case_when(is.na(poste_2) ~ poste_v2, .default = poste_2)
+    ) |> 
+  left_join(work_dict_poste) |> 
+  left_join(work_dict_sector)
+  # select(codbar, sexe, annee_naissance, profession, date_soumission)
 
+rm(work_dict_poste, work_dict_sector) # remove these intermediate files
 
 # ## Monthly questionnaires ####
 # monthly <- readRDS("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Bases_for_sharing/2021-05-19-1212_readable_dat_2021.05.19_monthly_V3.rds") |> 
