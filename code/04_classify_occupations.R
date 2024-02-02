@@ -16,8 +16,8 @@ occ_labels <- readxl::read_xlsx(here("data", "do-e-00-isco08-01.xlsx"), # read i
 occup <- dat_master_professions_2 %>% 
   select(master_profession, profession_source, profession.WORK, profession_other.inc, parent1_profession.inc_kids, 
          parent1_occupation_other.inc_kids, profession.st_22,job.st_23, ew_professsion.st_23,
-         job_sector.st_22, supervision.st_22,
-         job_sector_other.st_22, Occupation.WORK, Sector.WORK,serocov_work.inc,
+         job_sector.st_22, job_sector_other.st_22, supervision.st_22, job_sector.st_23,
+         Occupation.WORK, Sector.WORK,serocov_work.inc,
          participant_id, codbar) %>%
   # Make some changes to the free-text columns to make them easier to work with
   # (Convert accent characters, e.g. "é" to "e", convert all capital letters to small letters)
@@ -54,6 +54,9 @@ occup_ISCO <- occup %>%
     is.na(ISCO) & (str_detect(master_profession, "Chef-fe") | master_profession %in% c("directeur","directrice","cadre", "manager") | 
                      (str_detect(master_profession, "fonctionnai|emplo|responsa|direct") & str_detect(supervision.st_22, "Oui, et"))) &
       str_detect(job_sector.st_22, "Information") ~ 133,
+    is.na(ISCO) & (str_detect(master_profession, "Chef-fe") | master_profession %in% c("directeur","directrice","cadre", "manager") | 
+                     (str_detect(master_profession, "fonctionnai|emplo|responsa|direct") & str_detect(supervision.st_22, "Oui, et"))) &
+      str_detect(job_sector.st_22, "Santé") ~ 1342,
     is.na(ISCO) & (str_detect(master_profession, "Chef-fe") | master_profession %in% c("directeur","directrice","cadre", "manager") | 
                      (str_detect(master_profession, "fonctionnai|emplo|responsa|direct") & str_detect(supervision.st_22, "Oui, et"))) &
       str_detect(job_sector.st_22, "Enseignement|Santé|transports|Banques|Sécurité|comptabilité") ~ 134,
@@ -547,10 +550,15 @@ indices <- left_join(indices, indices_2)
 
 # Finalizing the file ####
 # In the final file, keep only the relevant columns that will be merged with our full dataset
-occup_ISCO_final <- occup_ISCO %>% select(codbar, master_profession, profession_source, 
+occup_ISCO_final <- occup_ISCO |> select(codbar, master_profession, profession_source, 
                                           Occupation.WORK, Sector.WORK,
                                           profession.WORK:job_sector_other.st_22,
                                           serocov_work.inc, ISCO)
+
+# # RECODE HEALTH SERVICES MANAGERS
+# occup_ISCO_final <- occup_ISCO %>%
+#   mutate(ISCO = case_when(ISCO == 1342 ~ 22, .default = ISCO)) |> 
+#   filter(ISCO == 22)
 
 # Read in the classified occupations data
 # (generated from "01_prep_a_classify occupations.R")
@@ -575,7 +583,7 @@ occup_ISCO_final <- occup_ISCO_final |>
 # # Save the final dataset
 saveRDS(occup_ISCO_final, here("data", "Classified_occupations.RDS"), ascii = TRUE)
 
-# # Delete intermediate objects ####
-# rm(
-#   occup, occ_labels, indices, indices_2
-# )
+# Delete intermediate objects ####
+rm(
+  occup, occ_labels, indices, indices_2, occup_ISCO
+)
