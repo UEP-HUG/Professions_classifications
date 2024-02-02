@@ -10,9 +10,9 @@ source(here("code","01_read_in_datasets.R"))
 ### ### ###
 ## Inclusion - All ####
 dat_inclusion <- inclusion |> 
-  select(codbar, age, serocov_work, work_pilote,  work_situation_rec_en, profession, profession_other,
+  select(participant_id, codbar, age, serocov_work, work_pilote,  work_situation_rec_en, profession, profession_other,
          occupation_cat_en, work_rata,  education, education_other, education_rec_en) |> 
-  rename_with(~ paste(., "inc", sep = "."), !matches(c("codbar")))
+  rename_with(~ paste(., "inc", sep = "."), !matches(c("codbar", "participant_id")))
 
 ## Inclusion - KIDS ####  --> Still need to combine this into the master_specchio dataset
 dat_inc_kids <- inc_kids |> 
@@ -60,7 +60,7 @@ dat_st_23 <- st_23 |>
 
 ## WORK 2020 ####
 dat_work <- work |> 
-  select(codbar, sexe, annee_naissance, profession, date_soumission, Occupation, Sector) |> 
+  select(ID, codbar, Hug_Date_Derniere_Soumission_C, sexe, annee_naissance, profession, date_soumission, Occupation, Sector) |> 
   rename_with(~ paste(., "WORK", sep = "."), !matches(c("codbar")))
 
 ### ### ###

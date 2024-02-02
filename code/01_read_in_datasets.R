@@ -18,6 +18,8 @@ inclusion <- readRDS("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Bases_for_s
     date_soumission = as_date(date_soumission),
     age = time_length(date_soumission - birthdate, "years"))
 
+
+
 ### KIDS inclusion ####
 inc_kids <- readRDS("P:/ODS/DMCPRU/UEPDATA/SEROCoV-KIDS/99_data/6_database/00_cleaned_augmented_database/2024-01-24_KIDS_inclusion_nov21_202401231106.rds") 
 inc_kids <- inc_kids |> 
@@ -103,16 +105,18 @@ work_dict_sector <- read_xlsx("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Ba
   add_row(Sector = "Other", Description = "Other", sect_activite = 99) # Add row of other
   
 ### Dataset ####
-work <- read_csv("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Base_de_données/classification_jobs_anup_jan_2024/SEROCoV-WORK_WP1_database_metiers_mzab4anup_2024.01.31.csv", locale = readr::locale(encoding = "latin1")) |> 
+work <- read_csv("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Base_de_données/classification_jobs_anup_jan_2024/SEROCoV-WORK_WP1_database_metiers_mzab4anup_matched_20240202.csv"
+                 # , locale = readr::locale(encoding = "latin1") # uncomment in case accents don't appear normally
+                 ) |> 
   mutate(
     date_soumission = as_date(mdy(date_du_rdv)),
-    codbar = as.character(codbar),
+    Hug_Date_Derniere_Soumission_C = as_date(Hug_Date_Derniere_Soumission_C),
+    codbar = as.character(clean_main_codbar), # update codbar from clean codbar provided by Julien
     poste = case_when(is.na(poste_2) ~ poste_v2, .default = poste_2)
     ) |> 
   left_join(work_dict_poste) |> 
   left_join(work_dict_sector) |> 
   arrange(profession)
-  # select(codbar, sexe, annee_naissance, profession, date_soumission)
 
 rm(work_dict_poste, work_dict_sector) # remove these intermediate files
 
