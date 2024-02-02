@@ -19,6 +19,8 @@ merged <- left_join(occup_ISCO_final, key_occupations, by = join_by("isco_2" == 
   ) |> 
   filter(isco_full != -999)
 
+health_w_check <- merged |> filter(health_workers == FALSE)
+
 # Summaries ####
 # define standard myflextable function 
 myflextable = function(data, ...) {
