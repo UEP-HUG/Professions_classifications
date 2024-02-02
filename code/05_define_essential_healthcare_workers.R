@@ -29,6 +29,7 @@ write_csv(merged, file = paste0("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/
                               format(Sys.time(), "%Y-%m-%d-%H%M_"),
                               "ISCO_recoded_essential_plus_health_workers.csv"))
 
+# Visually check that health workers are properly classified 
 health_w_check <- merged |> filter(health_workers == TRUE)
 
 # Summaries ####
