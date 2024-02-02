@@ -18,7 +18,7 @@ occup <- dat_master_professions_2 %>%
          parent1_occupation_other.inc_kids, profession.st_22,job.st_23, ew_professsion.st_23,
          job_sector.st_22, job_sector_other.st_22, supervision.st_22, job_sector.st_23,
          Occupation.WORK, Sector.WORK,serocov_work.inc,
-         participant_id, codbar) %>%
+         participant_id, codbar, Hug_Date_Derniere_Soumission_C.WORK) %>%
   # Make some changes to the free-text columns to make them easier to work with
   # (Convert accent characters, e.g. "é" to "e", convert all capital letters to small letters)
   mutate(master_profession = stringi::stri_trans_general(str = master_profession, 
@@ -550,9 +550,9 @@ indices <- left_join(indices, indices_2)
 
 # Finalizing the file ####
 # In the final file, keep only the relevant columns that will be merged with our full dataset
-occup_ISCO_final <- occup_ISCO |> select(codbar, master_profession, profession_source, 
+occup_ISCO_final <- occup_ISCO |> select(participant_id, codbar, master_profession, profession_source, 
                                           Occupation.WORK, Sector.WORK,
-                                          profession.WORK:job_sector_other.st_22,
+                                          profession.WORK:job_sector.st_23, Hug_Date_Derniere_Soumission_C.WORK,
                                           serocov_work.inc, ISCO)
 
 # # RECODE HEALTH SERVICES MANAGERS
