@@ -12,14 +12,24 @@ source(here("code","04_classify_occupations.R")) # can source this file if datas
 key_occupations <- read_csv2(here("data", "key_occupations_ILO_ISCO2.csv"))
 
 # Merge the classified occupations with the indices for frontline ("key") occupations
-merged <- left_join(occup_ISCO_final, key_occupations, by = join_by("isco_2" == "ISCO_2")) |> 
-  mutate(key_occupation = case_when(key_occupation ~ TRUE, .default = FALSE),
-         serocov_work.inc = case_when(serocov_work.inc ~ "Yes", .default = "No"), # recode as Yes / No
-         health_workers = case_when(occupational_grouping == "Health workers" ~ TRUE, .default = FALSE)
+merged <- left_join(occup_ISCO_final, key_occupations, by = join_by(
+  "isco_2" == "ISCO_2")
   ) |> 
-  filter(isco_full != -999)
+  mutate(key_occupation = case_when(key_occupation ~ TRUE, .default = FALSE), # define essential / key worker
+         serocov_work.inc = case_when(serocov_work.inc ~ "Yes", .default = "No"), # recode as Yes / No
+         health_workers = case_when(occupational_grouping == "Health workers" ~ TRUE, .default = FALSE) # define health workers
+  ) |> 
+  filter(isco_full != -999) # remove unclassified people
 
-health_w_check <- merged |> filter(health_workers == FALSE)
+# Save dataset
+saveRDS(merged, file = paste0("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Base_de_données/classification_jobs_anup_jan_2024/",
+                              format(Sys.time(), "%Y-%m-%d-%H%M_"),
+                              "ISCO_recoded_essential_plus_health_workers.rds"))
+write_csv(merged, file = paste0("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Base_de_données/classification_jobs_anup_jan_2024/",
+                              format(Sys.time(), "%Y-%m-%d-%H%M_"),
+                              "ISCO_recoded_essential_plus_health_workers.csv"))
+
+health_w_check <- merged |> filter(health_workers == TRUE)
 
 # Summaries ####
 # define standard myflextable function 
