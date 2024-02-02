@@ -3,7 +3,7 @@ source(here("code","02_combine_datasets.R"))
 
 exp_work <- dat_work
 exp_st22 <- dat_st_22 |> select(codbar, profession.st_22, job_sector.st_22, job_sector_other.st_22, supervision.st_22, years_of_service.st_22)
-exp_st23 <- dat_st_23 |> select(codbar, ew_professsion.st_23,job.st_23,years_of_service.st_23)
+exp_st23 <- dat_st_23 |> select(codbar, ew_professsion.st_23,job.st_23, job_sector.st_23, years_of_service.st_23)
 exp_inc_kids <- dat_inc_kids |> select(parent1_codbar, parent1_profession.inc_kids, 
                                          parent1_occupation.inc_kids, parent1_occupation_other.inc_kids, parent1_occupation_cat.inc_kids) |> 
   filter(!is.na(parent1_profession.inc_kids)) |>
