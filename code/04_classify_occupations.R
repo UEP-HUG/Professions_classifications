@@ -18,7 +18,7 @@ occup <- dat_master_professions_2 %>%
          parent1_occupation_other.inc_kids, profession.st_22,job.st_23, ew_professsion.st_23,
          job_sector.st_22, supervision.st_22,
          job_sector_other.st_22, Occupation.WORK, Sector.WORK,serocov_work.inc,
-         codbar) %>%
+         participant_id, codbar) %>%
   # Make some changes to the free-text columns to make them easier to work with
   # (Convert accent characters, e.g. "é" to "e", convert all capital letters to small letters)
   mutate(master_profession = stringi::stri_trans_general(str = master_profession, 
@@ -91,6 +91,7 @@ occup_ISCO <- occup %>%
     
     # Care workers
     is.na(ISCO) & str_detect(master_profession, "aid") & str_detect(master_profession, "domic|soig|soin") ~ 532,
+    is.na(ISCO) & str_detect(master_profession, "assistant") & str_detect(master_profession, "soin") ~ 322,
     is.na(ISCO) & str_detect(master_profession, "assc|ambulan|a.s.s.c.|soins ems|chauffeur bls aed|opticien|employee ems|asam iepa") ~ 325,
     
     is.na(ISCO) & str_detect(job_sector.st_22, "Santé") & str_detect(master_profession, "assistant") & str_detect(master_profession, "medic|dent|soins|soci") ~ 325,
@@ -563,13 +564,13 @@ occup_ISCO_final <- occup_ISCO_final %>% mutate(
   left_join(indices) # Merge with the indices dataframe
 
 # Label the occupations from the ISCO classifications for each code level (from 4 = "full" down to level 1)
-occup_ISCO_final <- left_join(occup_ISCO_final, occ_labels, by = c("isco_full" = "ISCO")) %>% rename(Occupation_label_full = Occupation_label)
-occup_ISCO_final <- left_join(occup_ISCO_final, occ_labels, by = c("isco_3" = "ISCO")) %>% rename(Occupation_label_3 = Occupation_label)
-occup_ISCO_final <- left_join(occup_ISCO_final, occ_labels, by = c("isco_2" = "ISCO")) %>% rename(Occupation_label_2 = Occupation_label)
-occup_ISCO_final <- left_join(occup_ISCO_final, occ_labels, by = c("isco_1" = "ISCO")) %>% rename(Occupation_label_1 = Occupation_label)
+occup_ISCO_final <- left_join(occup_ISCO_final, occ_labels, by = c("isco_full" = "ISCO")) %>% rename(ISCO_label_full = Occupation_label)
+occup_ISCO_final <- left_join(occup_ISCO_final, occ_labels, by = c("isco_3" = "ISCO")) %>% rename(ISCO_label_3 = Occupation_label)
+occup_ISCO_final <- left_join(occup_ISCO_final, occ_labels, by = c("isco_2" = "ISCO")) %>% rename(ISCO_label_2 = Occupation_label)
+occup_ISCO_final <- left_join(occup_ISCO_final, occ_labels, by = c("isco_1" = "ISCO")) %>% rename(ISCO_label_1 = Occupation_label)
 
 occup_ISCO_final <- occup_ISCO_final |> 
-  relocate(Occupation_label_full:Occupation_label_1, .after = profession_source) #|> filter(isco_full != -999)
+  relocate(ISCO_label_full:ISCO_label_1, .after = profession_source) #|> filter(isco_full != -999)
 
 # # Save the final dataset
 saveRDS(occup_ISCO_final, here("data", "Classified_occupations.RDS"), ascii = TRUE)
