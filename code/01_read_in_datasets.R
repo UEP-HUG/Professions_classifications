@@ -11,7 +11,7 @@ inclusion <- readRDS("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Bases_for_s
   # Remove the V5_inclusion people, as these are bus_santé people and there are some duplicates
   filter(Origin != "V5_inclusion") |>
   # Filter for only participants in one of the relevant studies
-  filter(serocov_pop | pop_pilote | serocov_schools | serocov_kids | serocov_work | sp2_novdec_2020 | sp3_juin_2021 | sp4_avril_2022) |> 
+  # filter(serocov_pop | pop_pilote | serocov_schools | serocov_kids | serocov_work | sp2_novdec_2020 | sp3_juin_2021 | sp4_avril_2022) |> 
   filter(!testeur) |>  # remove data produced by testers - I think Nick already did this
   filter(!str_starts(codbar, "T"))  |>  # Remove any people with codbar beginning with T (also testers)
   mutate(
