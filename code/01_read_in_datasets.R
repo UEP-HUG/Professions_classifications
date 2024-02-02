@@ -90,7 +90,26 @@ st_23 <- readRDS("P:/ODS/DMCPRU/UEPDATA/Pour_user/Pour_Anshu/santé_travail_11_2
   left_join(birthdates) |>
   mutate(
     date_soumission = as_date(date_soumission),
-    age = time_length(date_soumission - birthdate, "years"))
+    age = time_length(date_soumission - birthdate, "years")) |> 
+  group_by(participant_id) |> filter(n() < 2) |> ungroup() # remove duplicate entries
+
+sector_st_23 <- st_23 |> select(participant_id, starts_with("job_sector")) |> 
+  select(-job_sector_other_text) |>
+  mutate(
+    across(
+      # job_sector_commerce:job_sector_99,
+      starts_with("job_sector"),
+      ~na_if(., FALSE)
+    ))
+wc <- droplevels(col(sector_st_23, as.factor=TRUE)[which(sector_st_23 == "TRUE")])
+sector_st_23[levels(wc)] <- Map(factor, sector_st_23[levels(wc)], labels = levels(wc))
+sector_st_23 <- sector_st_23 |> 
+  unite("job_sector", job_sector_commerce:job_sector_99, na.rm = TRUE, sep = " ; ") |> 
+  mutate(job_sector = str_replace_all(job_sector, "job_sector_",""),
+         job_sector = str_replace(job_sector, "99","Other")
+  )
+st_23 <- left_join(st_23, sector_st_23)
+rm(sector_st_23, wc)
 
 ## WORK 2020 ####
 ### Data dictionary ####
