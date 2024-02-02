@@ -51,10 +51,9 @@ dat_st_22 <- st_22 |>
         ) |> 
   rename_with(~ paste(., "st_22", sep = "."), !matches(c("codbar")))
 
-### 2022 ####
+### 2023 ####
 dat_st_23 <- st_23 |> 
-  select(codbar, age, worked:workplace_size,years_of_service:move_work_other_text, 
-  ) |> 
+  select(codbar, age, worked:workplace_size,years_of_service:move_work_other_text, job_sector, -c(job_sector_commerce:job_sector_99)) |> 
   rename_with(~ paste(., "st_23", sep = "."), !matches(c("codbar")))
 
 
