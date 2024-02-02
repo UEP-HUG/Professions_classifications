@@ -1,6 +1,7 @@
-  # Professions_classifications
+# Professions_classifications  
 **Objective**: Use job sector and profession data to classify participants according to whether or not they can be considered healthcare workers or essential workers
 
+# Summary  
 In order to classify the workers, I used free-text entries for the profession questions that were posed in the Work serosurvey questionnaire of 2020, in the Kids’ inclusion questionnaire (filled out by the parents), and in the Santé-Travail questionnaires of 2022 and 2023. The Inclusion questionnaire has some information about job characteristics, but the response options are a bit limited in scope for this kind of classification (e.g. “Cadre ou profession de formation universitaire” or “Employé-e qualifié-e manuel-le”).
 Among participants who completed an inclusion questionnaire, for the moment we have 7,782 participants who responded to at least one of the 4 questionnaires that had free-text profession information. I then manually assigned ISCO occupation codes (using a script adapted from the classifications I made for the burnout article), and for the moment there are 6,376 participants classified with an ISCO code. While these classifications are mostly accurate, there are still many incorrect ones, and I think that getting a clean assignment of ISCO codes is really the main challenge of this project.
 
@@ -13,7 +14,7 @@ Berg, J., Ananian, S., Lieppmann, H., Mieres, F., Soares, S., Duman, A., Horne, 
 I put the preliminary datasets with occupation information into this folder in the Share (in rds and csv formats):
 P:\ODS\DMCPRU\UEPDATA\Specchio-COVID19\99_data\Base_de_données\classification_jobs_anup_jan_2024
 
-# Walkthrough of code
+# Walkthrough of code  
 The numbered code files run sequentially, but each one "sources" the preceding file, so for example you should be able to directly run the last file ("05_define_essential_healthcare_workers.R") and it will itself source the preceding four files. You should not have to manually move around any datasets, as they're all in the Share folder, and I've put the non-sensitive ones (e.g. with standard ISCO definitions / indices) directly in GitHub, so they should arrive in your local folders when you start the local repository.
 
 You should also **install the `pacman` package** (package management tool) for automatic installing / loading of all packages used in these analyses.
