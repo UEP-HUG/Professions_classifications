@@ -3,7 +3,9 @@
 
 
 # Walkthrough of code
-The numbered code files run sequentially, but each one "sources" the preceding file, so for example you should be able to directly run the last file ("05_define_essential_healthcare_workers.R") and it will itself source the preceding four files.
+The numbered code files run sequentially, but each one "sources" the preceding file, so for example you should be able to directly run the last file ("05_define_essential_healthcare_workers.R") and it will itself source the preceding four files. You should not have to manually move around any datasets, as they're all in the Share folder, and I've put the non-sensitive ones (e.g. with standard ISCO definitions / indices) directly in GitHub, so they should arrive in your local folders when you start the local repository.
+
+You should also **install the `pacman` package** (package management tool) for automatic installing / loading of all packages used in these analyses.
 
 -  01_read_in_datasets.R
     -  Read in relevant WORK, Specchio, and KIDS datasets
