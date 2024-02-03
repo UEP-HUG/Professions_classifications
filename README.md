@@ -30,7 +30,6 @@ You should also **install the `pacman` package** (package management tool) for a
         -  Inclusion - KIDS dataset (using the parent1 profession free-text)
         -  Santé-Travail 2022 and 2023 datasets
     -  I merged the files together, keeping the inclusion dataset as the default and then left_joining the others
-    -  I then filtered the dataset to include only participants who submitted responses to at least one of the four questionnaires above
     -  Created a single profession column that fills from the other datasets
         -  First I created an empty master_profession column, and then filled it up progressively from the datasets, going forward in time
             - For example, I first filled from the WORK dataset, but if there was no profession entry then I filled from the inclusion dataset, then from the KIDS dataset, etc.
