@@ -22,9 +22,16 @@ merged <- left_join(occup_ISCO_final, key_occupations, by = join_by(
   filter(isco_full != -999) # remove unclassified people
 
 # Save dataset
+# RDS - Share
 saveRDS(merged, file = paste0("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Base_de_données/classification_jobs_anup_jan_2024/",
                               format(Sys.time(), "%Y-%m-%d-%H%M_"),
                               "ISCO_recoded_essential_plus_health_workers.rds"))
+# RDS - output folder
+saveRDS(merged, file = paste0(here("output"), "/",
+                              format(Sys.time(), "%Y-%m-%d-%H%M_"),
+                              "ISCO_recoded_essential_plus_health_workers.rds"))
+
+# CSV - Share
 write_csv(merged, file = paste0("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Base_de_données/classification_jobs_anup_jan_2024/",
                               format(Sys.time(), "%Y-%m-%d-%H%M_"),
                               "ISCO_recoded_essential_plus_health_workers.csv"))
