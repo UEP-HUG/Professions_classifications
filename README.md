@@ -9,6 +9,9 @@ Finally, for the essential workers classifications I used a recent ILO paper (Be
 
 **A note:** in cases where people responded to more than one questionnaire, I used the earliest profession information we had for the classification, as for the moment I assumed that we wanted the profession closest to the first lockdown period. But, we can quite flexibly change this logic or could make a separate classification based on each timepoint.
 
+# Data dictionary  
+I've also included a data dictionary in the output folder, to explain the variables in the final generated file ("...ISCO_recoded_essential_plus_health_workers")
+
 Berg, J., Ananian, S., Lieppmann, H., Mieres, F., Soares, S., Duman, A., Horne, R., Shroff, T., Sobeck, K., Song, R., & International Labour Organization. Research Department. (2023). World employment and social outlook 2023: The value of essential work (1st ed.). ILO. https://doi.org/10.54394/OQVF7543
 
 I put the preliminary datasets with occupation information into this folder in the Share (in rds and csv formats):
