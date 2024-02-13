@@ -76,3 +76,6 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+
+# Version control these files
+!output/data_dictionary_ISCO_recoded_essential_plus_health_workers.xlsx
