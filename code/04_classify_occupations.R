@@ -581,7 +581,7 @@ occup_ISCO_final <- occup_ISCO_final |>
   relocate(ISCO_label_full:ISCO_label_1, .after = profession_source) #|> filter(isco_full != -999)
 
 # # Save the final dataset
-saveRDS(occup_ISCO_final, here("data", "Classified_occupations.RDS"), ascii = TRUE)
+saveRDS(occup_ISCO_final, here("output", "Classified_occupations.RDS"), ascii = TRUE)
 
 # Delete intermediate objects ####
 rm(
