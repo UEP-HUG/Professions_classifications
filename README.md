@@ -44,3 +44,4 @@ You should also **install the `pacman` package** (package management tool) for a
     -  I then merged this master_occupations file with an ISCO definitions file (downloaded from the ILO website), to assign the occupation labels at different code levels (e.g. at the 3-, 2-, and 1-digit codes)
 -  05_define_essential_healthcare_workers.R
     - This file takes the indices from the Berg et al. (2023) ILO paper, and merges with the ISCO classified file to add columns indicating "key" workers as well as "healthcare" workers
+    - This file from the WHO gives a handy set of ISCO-08 indices for classifying health workers: https://www.who.int/publications/m/item/classifying-health-workers
