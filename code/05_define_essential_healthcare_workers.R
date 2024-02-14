@@ -9,7 +9,9 @@ source(here("code","04_classify_occupations.R")) # can source this file if datas
 # occup_ISCO_final <- readRDS(here("output", "Classified_occupations.rds"))
 
 # Key occupations indices from ILO paper (Berg et al., 2023)
-key_occupations <- read_csv2(here("data", "key_occupations_ILO_ISCO2.csv"))
+key_occupations <- read_xlsx(here("data", "indices_key_HCW.xlsx"), sheet = "key_occupations_ILO_ISCO2")
+HCW <- read_xlsx(here("data", "indices_key_HCW.xlsx"), sheet = "HCW_WHO")
+
 
 # Merge the classified occupations with the indices for frontline ("key") occupations
 merged <- left_join(occup_ISCO_final, key_occupations, by = join_by(
