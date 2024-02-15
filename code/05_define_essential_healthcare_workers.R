@@ -14,29 +14,31 @@ HCW <- read_xlsx(here("data", "indices_key_HCW.xlsx"), sheet = "HCW_WHO")
 
 
 # Merge the classified occupations with the indices for frontline ("key") occupations
-merged <- left_join(occup_ISCO_final, key_occupations, by = join_by(
-  "isco_2" == "ISCO_2")
+merged <- left_join(occup_ISCO_final, key_occupations, by = join_by("isco_2" == "ISCO_2")) |>
+  # Merge with indices for "healthcare worker"
+  left_join(HCW, by = join_by("isco_full" == "ISCO")) |> 
+  mutate(
+    key_occupation = case_when(key_occupation == "TRUE" ~ TRUE, .default = FALSE), # define essential / key worker
+    serocov_work.inc = case_when(serocov_work.inc ~ "Yes", .default = "No"), # recode as Yes / No
+    health_workers = case_when(HCW == "Yes" ~ TRUE, .default = FALSE) # define health workers
   ) |> 
-  mutate(key_occupation = case_when(key_occupation ~ TRUE, .default = FALSE), # define essential / key worker
-         serocov_work.inc = case_when(serocov_work.inc ~ "Yes", .default = "No"), # recode as Yes / No
-         health_workers = case_when(occupational_grouping == "Health workers" ~ TRUE, .default = FALSE) # define health workers
-  ) |> 
-  filter(isco_full != -999) # remove unclassified people
+  filter(isco_full != -999) |> # remove unclassified people
+  select(-c(HCW, label, Hug_Date_Derniere_Soumission_C.WORK, physicalb))
 
-# Save dataset
-# RDS - Share
-saveRDS(merged, file = paste0("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Base_de_données/classification_jobs_anup_jan_2024/",
-                              format(Sys.time(), "%Y-%m-%d-%H%M_"),
-                              "ISCO_recoded_essential_plus_health_workers.rds"))
-# RDS - output folder
-saveRDS(merged, file = paste0(here("output"), "/",
-                              format(Sys.time(), "%Y-%m-%d-%H%M_"),
-                              "ISCO_recoded_essential_plus_health_workers.rds"))
-
-# CSV - Share
-write_csv(merged, file = paste0("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Base_de_données/classification_jobs_anup_jan_2024/",
-                              format(Sys.time(), "%Y-%m-%d-%H%M_"),
-                              "ISCO_recoded_essential_plus_health_workers.csv"))
+# # Save dataset
+# # RDS - Share
+# saveRDS(merged, file = paste0("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Base_de_données/classification_jobs_anup_jan_2024/",
+#                               format(Sys.time(), "%Y-%m-%d-%H%M_"),
+#                               "ISCO_recoded_essential_plus_health_workers.rds"))
+# # RDS - output folder
+# saveRDS(merged, file = paste0(here("output"), "/",
+#                               format(Sys.time(), "%Y-%m-%d-%H%M_"),
+#                               "ISCO_recoded_essential_plus_health_workers.rds"))
+# 
+# # CSV - Share
+# write_csv(merged, file = paste0("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Base_de_données/classification_jobs_anup_jan_2024/",
+#                                 format(Sys.time(), "%Y-%m-%d-%H%M_"),
+#                                 "ISCO_recoded_essential_plus_health_workers.csv"))
 
 # Visually check that health workers are properly classified 
 health_w_check <- merged |> filter(health_workers == TRUE)
@@ -63,7 +65,7 @@ by_work_key <- merged |>
   mutate(percent = paste0(round(n/sum(n)*100,1),"%"))
 # Bind them and output a summary table
 rbind(by_work_key, by_overall_key) |> myflextable()
-  
+
 ## Health workers ####
 by_overall_health <- merged |> 
   count(health_workers) |> 
