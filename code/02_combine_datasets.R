@@ -66,8 +66,13 @@ dat_work <- work |>
 # Combine the timepoints into a Master dataset ####
 ### ### ###
 
+## Join Inclusion - Date last submission ####
+dat_master_specchio <- left_join(dat_inclusion, date_last_submission, 
+                                 by = "participant_id") |> 
+  relocate(date_inclusion:beyond_inclusion, .after = codbar)
+
 ## Join Inclusion - Parents with General Health 2022 ####
-dat_master_specchio <- left_join(dat_inclusion, dat_gh_22, 
+dat_master_specchio <- left_join(dat_master_specchio, dat_gh_22, 
                                  by = "codbar")
 
 ## Join with General Health 2023 ####
@@ -90,8 +95,3 @@ dat_master_specchio <- left_join(dat_master_specchio, dat_st_22,
 ## Join with WORK 2020 ####
 dat_master_specchio <- left_join(dat_master_specchio, dat_work, 
                                  by = "codbar")
-
-### ### ###
-# Keep only Master Dataset ####
-### ### ###
-# rm(list=setdiff(ls(), c("dat_master_specchio")))

@@ -139,6 +139,15 @@ work <- read_csv("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Base_de_donnée
 
 rm(work_dict_poste, work_dict_sector) # remove these intermediate files
 
+# Last submission date ####
+date_last_submission <- read_csv("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Base_de_données/classification_jobs_anup_jan_2024/rapport_sugar_date_dernière_soumission_all18+_mzab_2024.02.15.csv") |> 
+  rename(participant_id = `Participant ID`,date_inclusion = `Date de réponse au questionnaire inclusion`,
+         date_last_submission = `Date de dernière soumission (hors résultat)`) |> 
+  mutate(date_inclusion = dmy(date_inclusion),
+         date_last_submission = dmy(date_last_submission),
+         beyond_inclusion = date_last_submission > date_inclusion
+         )
+
 # ## Monthly questionnaires ####
 # monthly <- readRDS("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Bases_for_sharing/2021-05-19-1212_readable_dat_2021.05.19_monthly_V3.rds") |> 
 #   mutate(date_soumission = as_date(date_sub)) |> 

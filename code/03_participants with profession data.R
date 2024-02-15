@@ -1,6 +1,7 @@
 pacman::p_load(here)
 source(here("code","02_combine_datasets.R"))
 
+# Datasets with some free-text on occupation ####
 exp_work <- dat_work
 exp_st22 <- dat_st_22 |> select(codbar, profession.st_22, job_sector.st_22, job_sector_other.st_22, supervision.st_22, years_of_service.st_22)
 exp_st23 <- dat_st_23 |> select(codbar, ew_professsion.st_23,job.st_23, job_sector.st_23, years_of_service.st_23)
@@ -17,13 +18,16 @@ exp_inc <- dat_inclusion |> select(participant_id, codbar, serocov_work.inc, pro
 # Combine to show which participants completed EITHER the st_22 or st_23 questionnaires
 dat_st_both <- full_join(exp_st22, exp_st23) |> mutate(filled_st = TRUE)
 
-
-# Merge st_both with inclusion 
-dat_master_professions <- left_join(exp_inc, dat_st_both)
-# Merge with incl_kids
-dat_master_professions <- left_join(dat_master_professions, exp_inc_kids, by = join_by("codbar" == "parent1_codbar"))
-# Merge with WORK
-dat_master_professions <- left_join(dat_master_professions, exp_work)
+# Make dat_master_professions object with merges ####
+  # Merge date_last_submission with inclusion 
+dat_master_professions <- left_join(exp_inc, date_last_submission) |> 
+  relocate(date_inclusion:beyond_inclusion, .after = codbar) |> 
+  # Merge st_both with inclusion 
+  left_join(dat_st_both) |> 
+  # Merge with incl_kids
+  left_join(exp_inc_kids, by = join_by("codbar" == "parent1_codbar")) |> 
+  # Merge with WORK
+  left_join(exp_work)
 
 # Add a variable to show if participant completed any st questionnaire OR participated in Sero-Cov-WORK OR completed KIDS inclusion
 dat_master_professions <- dat_master_professions |> 
@@ -71,3 +75,4 @@ dat_master_professions_2 <- dat_master_professions |>
 # Keep only Master Dataset ####
 ### ### ###
 rm(list=setdiff(ls(), c("dat_master_specchio", "dat_master_professions", "dat_master_professions_2")))
+saveRDS(dat_master_professions_2, file = paste0(here("output"), "/", "dat_master_professions_2.rds"))
