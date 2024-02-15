@@ -18,16 +18,16 @@ occup <- dat_master_professions_2 %>%
          parent1_occupation_other.inc_kids, profession.st_22,job.st_23, ew_professsion.st_23,
          job_sector.st_22, job_sector_other.st_22, supervision.st_22, job_sector.st_23,
          Occupation.WORK, Sector.WORK,serocov_work.inc,
-         participant_id, codbar, Hug_Date_Derniere_Soumission_C.WORK) %>%
+         participant_id, codbar, date_inclusion:beyond_inclusion, Hug_Date_Derniere_Soumission_C.WORK) %>%
   # Make some changes to the free-text columns to make them easier to work with
   # (Convert accent characters, e.g. "é" to "e", convert all capital letters to small letters)
   mutate(master_profession = stringi::stri_trans_general(str = master_profession, 
-                                                    id = "Latin-ASCII"), # Convert accent characters, e.g. "é" to "e"
-         master_profession = str_trim(str_to_lower(master_profession)),             # Convert all capital letters to small letters
+                                                         id = "Latin-ASCII"), # Convert accent characters, e.g. "é" to "e"
+         master_profession = str_squish(str_to_lower(master_profession)),             # Convert all capital letters to small letters
          
          job_sector_other.st_22 = stringi::stri_trans_general(str = job_sector_other.st_22, 
-                                                        id = "Latin-ASCII"),
-         job_sector_other.st_22 = str_trim(str_to_lower(job_sector_other.st_22)),
+                                                              id = "Latin-ASCII"),
+         job_sector_other.st_22 = str_squish(str_to_lower(job_sector_other.st_22)),
          ISCO = NA                                                               # Empty column that we'll fill in the next steps
   ) %>%
   add_count(master_profession, sort = TRUE) %>% 
@@ -488,11 +488,11 @@ occup_ISCO <- occup %>%
     
     # Unclassifiable
     is.na(ISCO) & master_profession %in% c("pas d'activite non salariee","pas d'activite", "pas d'activite independante, seulement salarie",
-                                      "aucun","non applicabel", "1 seule activite", "non, j'ai une activite salariee", 
-                                      "pas d'aittes avtivites", "0", "::::", "je suis que salarie", "mon travail principal", 
-                                      "pas  autre", "employe", "employee", "n/a", "pas d'activite non salariee", "actuellement j'ai une activite salariee",
-                                      "non", "aucun", "aucune", "mere au foyer", "sans objet", ".", "ne souhaite pas repondre",
-                                      "-", "--", "...", "?", "pas concerne", "na", "n.a.", "re´´´", "j'ai qu'une seule activite" 
+                                           "aucun","non applicabel", "1 seule activite", "non, j'ai une activite salariee", 
+                                           "pas d'aittes avtivites", "0", "::::", "je suis que salarie", "mon travail principal", 
+                                           "pas  autre", "employe", "employee", "n/a", "pas d'activite non salariee", "actuellement j'ai une activite salariee",
+                                           "non", "aucun", "aucune", "mere au foyer", "sans objet", ".", "ne souhaite pas repondre",
+                                           "-", "--", "...", "?", "pas concerne", "na", "n.a.", "re´´´", "j'ai qu'une seule activite" 
     ) ~ -999,
     is.na(ISCO) & str_detect(master_profession, "pas de plusieurs activite") ~ 9999,
     
@@ -523,17 +523,17 @@ occup_ISCO <- occup %>%
   # #                       , !ISCO %in% c(9999)
   #                       ) %>%      # Remove rows with unassigned ISCO codes, to work on what's left
   mutate(ISCO = case_when(is.na(ISCO) ~ -999, 
-                                      .default = ISCO)
-         ) %>% 
+                          .default = ISCO)
+  ) %>% 
   add_count(
     # job_sector.st_22,
     master_profession,
     sort = FALSE) %>% 
   arrange(
-          master_profession,
-          # desc(n),
-          job_sector.st_22) #%>% 
-  # select(master_profession, master_profession, master_profession, ISCO, job_sector.st_22, supervision.st_22, n)  # remove this line once you've got it all done
+    master_profession,
+    # desc(n),
+    job_sector.st_22) #%>% 
+# select(master_profession, master_profession, master_profession, ISCO, job_sector.st_22, supervision.st_22, n)  # remove this line once you've got it all done
 
 # Indices ####
 
@@ -551,9 +551,10 @@ indices <- left_join(indices, indices_2)
 # Finalizing the file ####
 # In the final file, keep only the relevant columns that will be merged with our full dataset
 occup_ISCO_final <- occup_ISCO |> select(participant_id, codbar, master_profession, profession_source, 
-                                          Occupation.WORK, Sector.WORK,
-                                          profession.WORK:job_sector.st_23, Hug_Date_Derniere_Soumission_C.WORK,
-                                          serocov_work.inc, ISCO)
+                                         Occupation.WORK, Sector.WORK,
+                                         profession.WORK:job_sector.st_23, 
+                                         date_inclusion:beyond_inclusion, Hug_Date_Derniere_Soumission_C.WORK,
+                                         serocov_work.inc, ISCO)
 
 # # RECODE HEALTH SERVICES MANAGERS
 # occup_ISCO_final <- occup_ISCO %>%
