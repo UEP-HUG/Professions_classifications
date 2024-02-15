@@ -54,12 +54,14 @@ occup_ISCO <- occup %>%
     ### Manufacturing, mining, construction, and distribution managers ####
     master_profession %in% c("") ~ 132,
     ### Information and communications technology service managers ####
-    master_profession %in% c("") ~ 133,
+    master_profession %in% c("directeur risk management et it dans societe financiere") ~ 133,
     ### Professional services managers ####
     #### Child care services managers ####
     master_profession %in% c("") ~ 1341,
     #### Health services managers ####
-    master_profession %in% c("") ~ 1342,
+    master_profession %in% c("cadre de sante", "cadre superieur de sante", "cadres de direction, services de sante",
+                             "cqdre de sante", "directeur rse sante surete environnement", 
+                             "sante publique haut fonctionnaire, onu (oms)") ~ 1342,
     #### Aged care services managers ####
     master_profession %in% c("") ~ 1343,
     #### Social welfare managers ####
@@ -112,11 +114,15 @@ occup_ISCO <- occup %>%
                              "physicienne medicale en radiotherapie") ~ 2212,
     ### Nurses ####
     #### Nursing professionals ####
-    master_profession %in% c("infirmier", "infirmiere", "infirmiere et therapeute") ~ 2221,
+    master_profession %in% c("infirmier", "infirmiere", "infirmiere et therapeute", "infirmiere de sante au travail",
+                             "infirmiere de sante communautaire", "infirmiere sante travail", 
+                             "infitmiere de sante au travail", "infirmiere en sante communautaire") ~ 2221,
     #### Midwifery professionals ####
     master_profession %in% c("sage femme", "sage-femme") ~ 2222,
     ### Traditional and complementary medicine professionals ####
-    master_profession %in% c("therapeute en mtc", "therapeute energeticienne", "therapeute et conseillere en sejours linguistique") ~ 223,
+    master_profession %in% c("therapeute en mtc", "therapeute energeticienne", "acupunctrice", "acupunctutrice",
+                             "therapeute et conseillere en sejours linguistique", 
+                             "enseignant taiji - qi gong, reflexologue, acupuncteur") ~ 223,
     ### Paramedical practitioners ####
     master_profession %in% c("") ~ 224,
     ### Veterinarians ####
@@ -139,13 +145,14 @@ occup_ISCO <- occup %>%
     master_profession %in% c("dieteticien", "dieteticienne", "dieteticiens et specialistes de la nutrition",
                              "therapeute nutritionniste") ~ 2265,
     #### Audiologists and speech therapists ####
-    master_profession %in% c("") ~ 2266,
+    master_profession %in% c("logopediste") ~ 2266,
     #### Optometrists and ophthalmic opticians ####
-    master_profession %in% c("orthoptiste") ~ 2267,
+    master_profession %in% c("orthoptiste", "optometriste") ~ 2267,
     #### The rest ####
     master_profession %in% c("ergotherapeute", "art-therapeute", "apres retraite therapeute", "musicotherapeute", 
-                             "therapeute", "therapeute en reflexologie", "ergotherapie",
-                             "therapeute en techniques manuelles, massages therapeutiques, reflexologie, sonotherapie") ~ 2269,
+                             "therapeute", "therapeute en reflexologie", "ergotherapie", "ergothera peute",
+                             "therapeute en techniques manuelles, massages therapeutiques, reflexologie, sonotherapie",
+                             "domaine de la sante") ~ 2269,
     ## Teaching professionals ####
     master_profession %in% c("") ~ 231,
     master_profession %in% c("") ~ 232,
@@ -181,21 +188,43 @@ occup_ISCO <- occup %>%
     master_profession %in% c("") ~ 315,
     ## Health Associate professionals ####
     ### Medical and pharmaceutical technicians ####
+    #### Medical imaging and therapeutic equipment technicians ####
+    master_profession %in% c("assistante en audiologir") ~ 3211,
     #### Pharmaceutical technicians and assistants ####
     master_profession %in% c("apprentie assistante en pharmacie", "apprentie en pharmacie",
                              "assistamte en pharmacie", "assistant en pharmacie", "assistante en pharmacie",
                              "assistante en pharmacie (officine)", "assistante gestion en pharmacie",
                              "assistante pharmacie", "assistante pharmacien", "preparatrice en pharmacie") ~ 3213,
+    #### Medical and dental prosthetic technicians ####
+    master_profession %in% c("technician dentist", "technicien dentiste", "technicien pour dentiste") ~ 3214,
     ### Nursing and midwifery associate professionals ####
-    master_profession %in% c("") ~ 322,
+    master_profession %in% c("aide en soins et sante communautaire", "assistant en soins et sante communautaire",
+                             "assistante en sante et soins communautaires", "assistante en soins et sante communautaire",
+                             "assitante en soin et sante communautaire", "assistante en soins et sante communautaire assc", 
+                             "assistante en soins et sante comunautaire", "apprenti assc", "apprentie assc",
+                             "assc", "assc urgences") ~ 322,
     ### Traditional and complementary medicine associate professionals ####
     master_profession %in% c("independente nutrition holistique / therapeute de fleurs de bach / hypnotherapeute (hypnopraxie)") ~ 323,
     ### Veterinary technicians and assistants ####
     master_profession %in% c("") ~ 324,
     ### Other health associate professionals ####
     master_profession %in% c("massotherapeute", "massotherapeute et personal trainer", "massotherapeute/ reflexologie",
-                             "therapeute de shiatsu") ~ 325,
-    
+                             "therapeute de shiatsu", "charge de projet, sante et migrants", 
+                             "chargeet de projet de sante publique", "cheffe de projet, sante publique", 
+                             "consultante en sante publique", "consultante sante publique", 
+                             "formatrice consultante en promotion et education a la sante",
+                             "resp sante & securite", "responsable pour des projet dans le metier sante",
+                             "sante travail", "specialiste de sante au travail", "assistante dentaire",
+                             "assistants en medecine dentaire", "hygieniste dentaire", "hygienistes dentaires",
+                             "hygieniste dentaire (desolee, je ne sais pas dans quelle categorie je dois le classer)",
+                             "opticien") ~ 325,
+    ####  Ambulance workers ####
+    master_profession %in% c("ambulancier", "ambulancier dipl. es", "ambulancier diplome es",
+                             "ambulancier es", "ambulancier es / formateur fsea", "ambulancier et enseignant",
+                             "ambulanciere", "ambulanciere diplomee es", "ambulanciere es", "ambulanciere es et directrice",
+                             "ambulancieres", "etudiant ambulancier", "etudiante ambulanciere / technicienne ambulanciere",
+                             "pompiers ambulancier", "technicien ambulancier", "technicienne ambulanciere",
+                             "tecnicien ambulancier") ~ 3258,
     
     master_profession %in% c("") ~ 331,
     master_profession %in% c("") ~ 332,
@@ -209,13 +238,18 @@ occup_ISCO <- occup %>%
     master_profession %in% c("") ~ 343,
     master_profession %in% c("") ~ 351,
     master_profession %in% c("") ~ 352,
-    master_profession %in% c("") ~ 411,
+    ## General and keyboard clerks ####
+    ### General office clerks ####
+    (str_detect(master_profession, "adjoint") & str_detect(master_profession, "admin")) | 
+      master_profession %in% c("") ~ 411,
+    ### Secretaries (general) ####
     master_profession %in% c("") ~ 412,
+    ### Keyboard operators ####
     master_profession %in% c("") ~ 413,
     master_profession %in% c("") ~ 421,
     master_profession %in% c("") ~ 422,
     master_profession %in% c("") ~ 431,
-    master_profession %in% c("") ~ 432,
+    master_profession %in% c("disposante") ~ 432,
     master_profession %in% c("") ~ 441,
     master_profession %in% c("") ~ 511,
     master_profession %in% c("") ~ 512,
@@ -226,11 +260,16 @@ occup_ISCO <- occup %>%
     ### Other personal services workers ####
     master_profession %in% c("astro-psychologue") ~ 516,
     master_profession %in% c("") ~ 521,
-    master_profession %in% c("") ~ 522,
+    master_profession %in% c("droguiste") ~ 522,
     master_profession %in% c("") ~ 523,
     master_profession %in% c("") ~ 524,
-    master_profession %in% c("") ~ 531,
-    master_profession %in% c("") ~ 532,
+    ## Personal Care workers ####
+    ### Child care workers and teachers' aides ####
+    (str_detect(master_profession, "accueil") & str_detect(master_profession, "familial")) | 
+      master_profession %in% c("") ~ 531,
+    ### Personal care workers in health services ####
+    (str_detect(master_profession, "aid") & str_detect(master_profession, "soign")) | 
+      master_profession %in% c("auxiliaire de sante", "auxiliaire de sante dans un ems") ~ 532,
     master_profession %in% c("") ~ 541,
     master_profession %in% c("") ~ 611,
     master_profession %in% c("") ~ 612,
@@ -309,7 +348,7 @@ occup_ISCO <- occup %>%
 # select(master_profession, master_profession, master_profession, ISCO, job_sector.st_22, supervision.st_22, n)  # remove this line once you've got it all done
 
 # Working set (to refer to for assigning codes) ####
-a <- occup_ISCO |> filter(str_detect(master_profession, "therap"))
+a <- occup_ISCO |> filter(str_detect(master_profession, "soign"))
 
 # # Indices ####
 # 
