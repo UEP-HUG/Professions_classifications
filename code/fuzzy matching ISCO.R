@@ -85,19 +85,26 @@ b <- a |>
   # mutate(distinct = n()) |> # Add a column for number of instances of participant_id
   ungroup() |> 
   # Add a column we can use to screen "low-quality" or no matches
-  mutate(NA_or_high_distance = case_when(
-    is.na(ISCO)|
-      # distinct > 1 | 
-      dist >= 0.1 ~ TRUE, 
-    .default = FALSE)) |> 
+  mutate(
+    NA_or_high_distance = case_when(
+      is.na(ISCO)| # no match
+        # distinct > 1 | # multiple matches
+        dist >= 0.1 ~ TRUE, # distance >= specified cutoff
+      .default = FALSE)) |> 
   arrange(master_profession, participant_id, dist) |>  # Arrange best match first for each participant_id
   group_by(participant_id) |> 
   # arrange(dist, .by_group = TRUE) |> 
   mutate(
     id_index = as.numeric(fct_reorder(factor(Name_fr), dist)), # index of order of top matches by participant_id
     # top_match = duplicated(participant_id) == FALSE,  # specify top match
-    good_top_match = id_index == 1 & NA_or_high_distance == FALSE
-  )
+    # For matches within a participant_id, specify whether or not the top match is good
+    group_top_match = case_when(
+      id_index == 1 & NA_or_high_distance == FALSE ~ "Good",
+      id_index == 1 & NA_or_high_distance == TRUE ~ "Not good",
+      .default = NA)) |> 
+  ungroup() |> 
+  tidyr::fill(group_top_match, .direction = "down") |> # Fill the variable down to the whole group
+  filter(!(group_top_match == "Good" & id_index != 1)) # Remove secondary matches when a top match is "Good"
 
 
 # Merge with ISCO labels file ####
