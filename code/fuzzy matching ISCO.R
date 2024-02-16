@@ -71,7 +71,7 @@ a <- fuzzyjoin::stringdist_left_join(
   x = occup,
   y = professions,
   by = c(master_profession = "Name_fr"),
-  method = "jw", #use jw distance metric
+  method = "jw", #use Jaro-Winkler distance metric
   distance_col = "dist",
   max_dist = 0.5 # Set a cutoff for the matches, and any NAs beyond that can be manually classified
 ) |> 
