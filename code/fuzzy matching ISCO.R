@@ -76,20 +76,28 @@ a <- fuzzyjoin::stringdist_left_join(
   max_dist = 0.5 # Set a cutoff for the matches, and any NAs beyond that can be manually classified
 ) |> 
   group_by(participant_id) |>
-  slice_min(order_by=dist, n=5) |> # Keep the n best matches (least "distance")
+  slice_min(order_by=dist, n=5) # Keep the n best matches (least "distance")
+
+# What I want to do now: 
+# If the top match has a distance lower than 0.1 (or whatever number to be specified), I want to keep only the top match and remove all secondary matches. Otherwise, I want to keep all matches for downstream visual screening and manual classification.
+b <- a |> 
   group_by(participant_id) |> 
-  mutate(distinct = n()) |> # Add a column for number of instances of participant_id
+  # mutate(distinct = n()) |> # Add a column for number of instances of participant_id
   ungroup() |> 
-  # Add a column we can use to screen "low-quality" or multiple matches with same distance
-  mutate(dup_or_NA_or_high_distance = case_when(is.na(ISCO)|
-                                                  # distinct > 1 | 
-                                                  dist > 0.13 ~ TRUE, 
-                                                .default = FALSE)) |> 
-  arrange(master_profession, participant_id, dist)
-
-
-
-
+  # Add a column we can use to screen "low-quality" or no matches
+  mutate(NA_or_high_distance = case_when(
+    is.na(ISCO)|
+      # distinct > 1 | 
+      dist >= 0.1 ~ TRUE, 
+    .default = FALSE)) |> 
+  arrange(master_profession, participant_id, dist) |>  # Arrange best match first for each participant_id
+  group_by(participant_id) |> 
+  # arrange(dist, .by_group = TRUE) |> 
+  mutate(
+    id_index = as.numeric(fct_reorder(factor(Name_fr), dist)), # index of order of top matches by participant_id
+    # top_match = duplicated(participant_id) == FALSE,  # specify top match
+    good_top_match = id_index == 1 & NA_or_high_distance == FALSE
+  )
 
 
 # Merge with ISCO labels file ####
