@@ -1,5 +1,6 @@
 pacman::p_load(    # Installs / loads packages if they are not already installed / loaded
   here,         # File locator
+  tidyverse,
   janitor,      
   readxl,
   stringi       # String manipulation
