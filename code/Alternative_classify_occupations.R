@@ -23,9 +23,11 @@ occup <- dat_master_professions_2 %>%
          participant_id, codbar, date_inclusion:beyond_inclusion, Hug_Date_Derniere_Soumission_C.WORK) %>%
   # Make some changes to the free-text columns to make them easier to work with
   # (Convert accent characters, e.g. "é" to "e", convert all capital letters to small letters)
-  mutate(master_profession = stringi::stri_trans_general(str = master_profession, 
+  mutate(
+    master_profession = stringi::stri_trans_general(str = master_profession, 
                                                          id = "Latin-ASCII"), # Convert accent characters, e.g. "é" to "e"
          master_profession = str_squish(str_to_lower(master_profession)),             # Convert all capital letters to small letters
+         
          
          job_sector_other.st_22 = stringi::stri_trans_general(str = job_sector_other.st_22, 
                                                               id = "Latin-ASCII"),
