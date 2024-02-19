@@ -3,8 +3,16 @@ pacman::p_load(
   here,
   data.table,
   fuzzyjoin,
+  # fuzzywuzzy,
+  # stringdist,
+  stopwords, # package with list of stopwords
+  tidytext,
   stringi
 )
+
+# French "stopwords" (common words) list to remove from professions
+stopwords_fr <- tibble(word = stopwords("fr")) |> 
+  filter(word != c("avions", "son"))
 
 # Occupations from I14Y Swiss platform ####
 
@@ -20,7 +28,7 @@ pacman::p_load(
 
 professions_fr <- fread(here("data", "HCL_CH_ISCO_19_PROF_1_2_level_6.csv"))
 # professions_fr_5 <- fread(here("data", "HCL_CH_ISCO_19_PROF_1_2_level_5.csv")) |> arrange(Parent)
-professions_fr_3 <- fread(here("data", "HCL_CH_ISCO_19_PROF_1_2_levels_3-6.csv"))
+# professions_fr_3 <- fread(here("data", "HCL_CH_ISCO_19_PROF_1_2_levels_3-6.csv"))
 
 ## Transform strings and codes for fuzzy matching ####
 professions <- professions_fr |> 
@@ -36,7 +44,21 @@ professions <- professions_fr |>
   # Manually add some common abbreviations or other occupations that are not in the file
   add_row(Name_fr = "assc", ISCO = 3221) |> 
   add_row(Name_fr = "a.s.e", ISCO = 5322) |> 
-  arrange(Name_fr)
+  add_row(Name_fr = "ase", ISCO = 5322) |> 
+  arrange(Name_fr) |> 
+  rowid_to_column()
+
+# Remove common "stopwords"
+prof_stop <- professions |> 
+  unnest_tokens(word, Name_fr) |> 
+  anti_join(stopwords_fr) |> 
+  group_by(rowid) |> 
+  mutate(Name_fr_2 = paste(word, collapse = " ")) |> 
+  ungroup() |> 
+  select(-word) |> 
+  distinct()
+
+professions <- left_join(professions, prof_stop)
 
 
 # Read in our dataset ####
@@ -62,37 +84,67 @@ occup <- dat_master_professions_2 %>%
          job_sector_other.st_22 = str_squish(str_to_lower(job_sector_other.st_22)),
          ISCO = NA                                                               # Empty column that we'll fill in the next steps
   ) %>%
+  mutate(
+    master_profession = str_replace(master_profession, " rh| rh", "ressources humaines"),
+    master_profession = str_replace(master_profession, "l'onu|l'oms", "organisation international")
+    ) |> 
   add_count(master_profession, sort = TRUE) %>% 
   arrange(master_profession, desc(n)) |>
-  sample_n(30) |> # Take a random sample of n rows (when trying things out, to save time)
-  select(participant_id, master_profession)
+  sample_n(1000) |> # Take a random sample of n rows (when trying things out, to save time)
+  select(participant_id, master_profession) |> 
+# Remove stopwords (trial)
+  mutate(master_profession_short = master_profession) |> 
+  unnest_tokens(word, master_profession_short) |> 
+  anti_join(stopwords_fr) |> 
+  group_by(participant_id) |>
+  mutate(master_profession_short = paste(word, collapse = " ")) |>
+  ungroup() |>
+  select(-word) |> 
+  #keep only distinct rows
+  distinct() #|> 
+  # pivot_longer(cols = !participant_id, values_to = "profession", names_to = "source") |> 
+  # arrange(participant_id, profession, source)
+
+
 
 a <- fuzzyjoin::stringdist_left_join(
   x = occup,
   y = professions,
-  by = c(master_profession = "Name_fr"),
-  method = "jw", #use Jaro-Winkler distance metric
+  by = c(master_profession_short = "Name_fr_2"), # Match against the stopwords removed versions
+  method = "jaccard", q = 3, # q = the size of the q-grams
+  # method = "jw", #use Jaro-Winkler distance metric
+  # method = "osa", #use Optimal String Alignment distance metric
   distance_col = "dist",
-  max_dist = 0.5 # Set a cutoff for the matches, and any NAs beyond that can be manually classified
+  max_dist = 0.7 # Set a cutoff for the matches, Jaro-Winkler / Jaccard
+  # max_dist = 4 # Set a cutoff for the matches, OSA
 ) |> 
-  group_by(participant_id) |>
+  group_by(
+    participant_id
+    # ,profession
+    ) |>
   slice_min(order_by=dist, n=5) # Keep the n best matches (least "distance")
 
-# What I want to do now: 
+
 # If the top match has a distance lower than 0.1 (or whatever number to be specified), I want to keep only the top match and remove all secondary matches. Otherwise, I want to keep all matches for downstream visual screening and manual classification.
 b <- a |> 
-  group_by(participant_id) |> 
+  # group_by(participant_id, word) |> 
   # mutate(distinct = n()) |> # Add a column for number of instances of participant_id
-  ungroup() |> 
+  # ungroup() |> 
   # Add a column we can use to screen "low-quality" or no matches
   mutate(
     NA_or_high_distance = case_when(
       is.na(ISCO)| # no match
         # distinct > 1 | # multiple matches
-        dist >= 0.1 ~ TRUE, # distance >= specified cutoff
+        # dist >= 0.1 ~ TRUE, # distance >= specified cutoff with Jaro-Winkler distance
+        dist >= 0.51 ~ TRUE, # distance >= specified cutoff with Jaccard distance
+        # dist >= 3 ~ TRUE, # distance >= specified cutoff with OSA distance
       .default = FALSE)) |> 
-  arrange(master_profession, participant_id, dist) |>  # Arrange best match first for each participant_id
-  group_by(participant_id) |> 
+  arrange(master_profession, participant_id, 
+          # word, 
+          dist) |>  # Arrange best match first for each participant_id
+  group_by(participant_id
+           # , word
+           ) |> 
   # arrange(dist, .by_group = TRUE) |> 
   mutate(
     id_index = as.numeric(fct_reorder(factor(Name_fr), dist)), # index of order of top matches by participant_id
@@ -106,6 +158,14 @@ b <- a |>
   tidyr::fill(group_top_match, .direction = "down") |> # Fill the variable down to the whole group
   filter(!(group_top_match == "Good" & id_index != 1)) # Remove secondary matches when a top match is "Good"
 
+# saveRDS(a, file = paste0(here("output"), "/", "fuzzy_matched_occupations_a.rds"))
+# saveRDS(b, file = paste0(here("output"), "/", "fuzzy_matched_occupations_cleaned_b.rds"))
+
+# b |> filter(group_top_match == "Not good") |> count(participant_id)
+
+good_matches <- b |> filter(group_top_match == "Good")
+bad_matches <- b |> filter(group_top_match == "Not good")
+
 
 # Merge with ISCO labels file ####
 ## Read in ISCO labels ####
@@ -114,6 +174,6 @@ occ_labels <- readxl::read_xlsx(here("data", "do-e-00-isco08-01.xlsx"), # read i
   filter(!str_detect(Occupation_label, "armed forces|Armed forces")) # Remove armed services as their numbers cause weirdness and we don't have them in our dataset
 
 ## Merge ####
-occup_final <- a |> 
+occup_final <- good_matches |> 
   left_join(occ_labels) %>%                      # Merge with ISCO occupations file
   relocate(Occupation_label, .after = master_profession)
