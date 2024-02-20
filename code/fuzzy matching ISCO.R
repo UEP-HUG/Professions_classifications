@@ -12,9 +12,9 @@ pacman::p_load(
 
 # French "stopwords" (common words) list to remove from professions
 stopwords_fr <- tibble(word = stopwords("fr")) |> 
-  filter(word != c("avions", "son")) |> 
-  add_row(word = c("l'", "d'")) |> 
-  mutate(word = stri_trans_general(word, id = "Latin-ASCII"))
+  filter(word != c("avions", "son")) |> # remove these ones
+  add_row(word = c("l'", "d'")) |> # add these in
+  mutate(word = stri_trans_general(word, id = "Latin-ASCII")) # remove accents
 
 # Occupations from I14Y Swiss platform ####
 
@@ -47,6 +47,17 @@ professions <- professions_fr |>
   add_row(Name_fr = "assc", ISCO = 3221) |> 
   add_row(Name_fr = "a.s.e", ISCO = 5322) |> 
   add_row(Name_fr = "ase", ISCO = 5322) |> 
+  add_row(Name_fr = "administrateur", ISCO = 4110) |> 
+  add_row(Name_fr = "administratrice", ISCO = 4110) |> 
+  add_row(Name_fr = "administratif", ISCO = 4419) |> 
+  # add_row(Name_fr = "", ISCO = ) |> 
+  # add_row(Name_fr = "", ISCO = ) |> 
+  # add_row(Name_fr = "", ISCO = ) |> 
+  # add_row(Name_fr = "", ISCO = ) |> 
+  # add_row(Name_fr = "", ISCO = ) |> 
+  # add_row(Name_fr = "", ISCO = ) |> 
+  # add_row(Name_fr = "", ISCO = ) |> 
+  # add_row(Name_fr = "", ISCO = ) |> 
   arrange(Name_fr) |> 
   rowid_to_column()
 
@@ -105,7 +116,7 @@ occup <- dat_master_professions_2 %>%
     ) |> 
   add_count(master_profession, sort = TRUE) %>% 
   arrange(master_profession, desc(n)) |>
-  # sample_n(30) |> # Take a random sample of n rows (when trying things out, to save time)
+  sample_n(1000) |> # Take a random sample of n rows (when trying things out, to save time)
   select(participant_id, master_profession) |> 
 # Remove stopwords (trial)
   mutate(master_profession_short = master_profession) |> 
@@ -126,11 +137,11 @@ matches_jaccard <- fuzzyjoin::stringdist_left_join(
   x = occup,
   y = professions,
   by = c(master_profession_short = "Name_fr_2"), # Match against the stopwords removed versions
-  method = "jaccard", q = 3, # q = the size of the q-grams
-  # method = "jw", #use Jaro-Winkler distance metric
+  # method = "jaccard", q = 3, # q = the size of the q-grams
+  method = "jw", #use Jaro-Winkler distance metric
   # method = "osa", #use Optimal String Alignment distance metric
   distance_col = "dist_jaccard",
-  max_dist = 0.7 # Set a cutoff for the matches, Jaro-Winkler / Jaccard
+  max_dist = 0.2 # Set a cutoff for the matches, Jaro-Winkler --> 0.4 / Jaccard --> 0.7
   # max_dist = 4 # Set a cutoff for the matches, OSA
 ) |> 
   group_by(
@@ -139,6 +150,7 @@ matches_jaccard <- fuzzyjoin::stringdist_left_join(
     ) |>
   slice_min(order_by=dist_jaccard, n=5) # Keep the n best matches (least "distance")
 
+# hold_matches <- matches_jaccard
 
 # If the top match has a distance lower than 0.1 (or whatever number to be specified), I want to keep only the top match and remove all secondary matches. Otherwise, I want to keep all matches for downstream visual screening and manual classification.
 cleaner_matches_jaccard <- matches_jaccard |> 
@@ -150,8 +162,8 @@ cleaner_matches_jaccard <- matches_jaccard |>
     NA_or_high_distance = case_when(
       is.na(ISCO)| # no match
         # distinct > 1 | # multiple matches
-        # dist_jaccard >= 0.1 ~ TRUE, # distance >= specified cutoff with Jaro-Winkler distance
-        dist_jaccard >= 0.51 ~ TRUE, # distance >= specified cutoff with Jaccard distance
+        dist_jaccard >= 0.07 ~ TRUE, # distance >= specified cutoff with Jaro-Winkler distance
+        # dist_jaccard >= 0.51 ~ TRUE, # distance >= specified cutoff with Jaccard distance
         # dist_jaccard >= 3 ~ TRUE, # distance >= specified cutoff with OSA distance
       .default = FALSE)) |> 
   arrange(master_profession, participant_id, 
@@ -179,6 +191,7 @@ cleaner_matches_jaccard <- matches_jaccard |>
 # cleaner_matches_jaccard |> filter(group_top_match == "Not good") |> count(participant_id)
 
 good_matches <- cleaner_matches_jaccard |> filter(group_top_match == "Good")
+g_matches <- good_matches |> filter(dist_jaccard > 0.2)
 bad_matches <- cleaner_matches_jaccard |> filter(group_top_match == "Not good")
 
 # Jaro-Winkler fuzzy matching ####
@@ -194,11 +207,11 @@ matches_jw <- fuzzyjoin::stringdist_left_join(
   x = matches_jw_prep,
   y = professions,
   by = c(master_profession_short = "Name_fr_2"), # Match against the stopwords removed versions
-  # method = "jaccard", q = 3, # q = the size of the q-grams
-  method = "jw", #use Jaro-Winkler distance metric
+  method = "jaccard", q = 3, # q = the size of the q-grams
+  # method = "jw", #use Jaro-Winkler distance metric
   # method = "osa", #use Optimal String Alignment distance metric
   distance_col = "dist_jw",
-  max_dist = 0.3 # Set a cutoff for the matches, Jaro-Winkler / Jaccard
+  max_dist = 0.7 # Set a cutoff for the matches, Jaro-Winkler / Jaccard
   # max_dist = 4 # Set a cutoff for the matches, OSA
 ) |> 
   group_by(
@@ -206,8 +219,48 @@ matches_jw <- fuzzyjoin::stringdist_left_join(
     # ,profession
   ) |>
   slice_min(order_by=dist_jw, n=5) # Keep the n best matches (least "distance")
-  
 
+## Clean up matches
+cleaner_matches_jw <- matches_jw |> 
+  # group_by(participant_id, word) |> 
+  # mutate(distinct = n()) |> # Add a column for number of instances of participant_id
+  # ungroup() |> 
+  # Add a column we can use to screen "low-quality" or no matches
+  mutate(
+    NA_or_high_distance = case_when(
+      is.na(ISCO)| # no match
+        # distinct > 1 | # multiple matches
+        # dist_jaccard >= 0.07 ~ TRUE, # distance >= specified cutoff with Jaro-Winkler distance
+      dist_jw >= 0.4 ~ TRUE, # distance >= specified cutoff with Jaccard distance
+      # dist_jaccard >= 3 ~ TRUE, # distance >= specified cutoff with OSA distance
+      .default = FALSE)) |> 
+  arrange(master_profession, participant_id, 
+          # word, 
+          dist_jw) |>  # Arrange best match first for each participant_id
+  group_by(participant_id
+           # , word
+  ) |> 
+  # arrange(dist_jw, .by_group = TRUE) |> 
+  mutate(
+    id_index = as.numeric(fct_reorder(factor(Name_fr), dist_jw)), # index of order of top matches by participant_id
+    # top_match = duplicated(participant_id) == FALSE,  # specify top match
+    # For matches within a participant_id, specify whether or not the top match is good
+    group_top_match = case_when(
+      id_index == 1 & NA_or_high_distance == FALSE ~ "Good",
+      id_index == 1 & NA_or_high_distance == TRUE ~ "Not good",
+      .default = NA)) |> 
+  ungroup() |> 
+  tidyr::fill(group_top_match, .direction = "down") |> # Fill the variable down to the whole group
+  filter(!(group_top_match == "Good" & id_index != 1)) # Remove secondary matches when a top match is "Good"
+
+# saveRDS(matches_jaccard, file = paste0(here("output"), "/", "fuzzy_matched_occupations_a.rds"))
+# saveRDS(cleaner_matches_jaccard, file = paste0(here("output"), "/", "fuzzy_matched_occupations_cleaned_b.rds"))
+
+# cleaner_matches_jaccard |> filter(group_top_match == "Not good") |> count(participant_id)
+
+good_matches_jaccard <- cleaner_matches_jw |> filter(group_top_match == "Good")
+g_matches_jaccard <- good_matches |> filter(dist_jw > 0.2)
+bad_matches_jaccard <- cleaner_matches_jw |> filter(group_top_match == "Not good")
 
 
 # Merge with ISCO labels file ####
