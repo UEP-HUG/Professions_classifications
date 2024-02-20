@@ -103,10 +103,11 @@ occup <- dat_master_professions_2 %>%
   ) %>%
   mutate(
     master_profession_original = master_profession,
-    master_profession = str_replace(master_profession, " rh| rh", "ressources humaines"),
-    master_profession = case_when(master_profession %in% c("rh") ~ "ressources humaines", .default = master_profession),
-    master_profession = str_replace(master_profession, "l'onu|l'oms| onu | oms ", "organisation international"),
-    master_profession = case_when(master_profession %in% c("onu", "oms") ~ "ressources humaines", .default = master_profession),
+    master_profession = str_replace(master_profession, " rh| rh", " ressources humaines"),
+    master_profession = str_replace(master_profession, " hr", " human resources"),
+    master_profession = case_when(master_profession %in% c("rh") ~ " ressources humaines", .default = master_profession),
+    master_profession = str_replace(master_profession, "l'onu|l'oms| onu | oms |united nations", " organisation international"),
+    master_profession = case_when(master_profession %in% c("onu", "oms") ~ "organisation international", .default = master_profession),
     master_profession = str_replace(master_profession, "infitmier", "infirmier"),
     master_profession = str_replace(master_profession, "couffeuse", "coiffeuse"),
     master_profession = str_replace(master_profession, "projer", "projet"),
@@ -114,16 +115,23 @@ occup <- dat_master_professions_2 %>%
     master_profession = str_replace(master_profession, "coseiller", "conseiller"),
     master_profession = str_replace(master_profession, "medevin", "medecin"),
     master_profession = str_replace(master_profession, "prof |prof.", "professeur"),
-    master_profession = str_replace(master_profession, "resp.|responsabke", "responsable"),
+    master_profession = str_replace(master_profession, " resp |responsabke", "responsable"),
     master_profession = str_replace(master_profession, "tpg", "bus"),
-    master_profession = str_replace(master_profession, " ems", "etablissement medico social"),
+    master_profession = str_replace(master_profession, " ems", " etablissement medico social"),
+    master_profession = case_when(master_profession %in% c("ems") ~ "etablissement medico social", .default = master_profession),
+    master_profession = str_replace(master_profession, " hets", " travail social"),
     # master_profession = str_replace(master_profession, "", ""),
     # master_profession = str_replace(master_profession, "", ""),
-    # master_profession = str_replace(master_profession, "", "")
+    # master_profession = str_replace(master_profession, "", ""),
+    # master_profession = str_replace(master_profession, "", ""),
+    # master_profession = str_replace(master_profession, "", ""),
+    
+    # resquish in case spaces were introduced
+    master_profession = str_squish(master_profession)
     ) |> 
   add_count(master_profession, sort = TRUE) %>% 
   arrange(master_profession, desc(n)) |>
-  sample_n(500) |> # Take a random sample of n rows (when trying things out, to save time)
+  sample_n(2000) |> # Take a random sample of n rows (when trying things out, to save time)
   select(participant_id, master_profession_original, master_profession, profession_source) |> 
 # Remove stopwords (trial)
   mutate(master_profession = str_replace(master_profession, "l'|d'", "")) |> # remove the l' and d'
@@ -211,7 +219,7 @@ cleaner_matches_jaccard <- matches_jaccard |>
   mutate(
     NA_or_high_distance = case_when(
       is.na(ISCO)| # no match
-      dist_jaccard >= 0.4 ~ TRUE, # distance >= specified cutoff with Jaccard distance
+      dist_jaccard >= 0.35 ~ TRUE, # distance >= specified cutoff with Jaccard distance
       .default = FALSE)) |> 
   arrange(master_profession, participant_id, dist_jaccard) |>  # Arrange best match first for each participant_id
   group_by(participant_id) |> 
@@ -262,5 +270,7 @@ occ_labels <- readxl::read_xlsx(here("data", "do-e-00-isco08-01.xlsx"), # read i
 occup_final <- occup_matched |> 
   left_join(occ_labels) %>%                      # Merge with ISCO occupations file
   relocate(Occupation_label, .after = master_profession) |> 
-  select(participant_id, profession_source, master_profession, Name_fr, Occupation_label, dist_jw, dist_jaccard, ISCO, ISCO_full) |> 
-  mutate(high_confidence = case_when(dist_jw < 0.07 | dist_jaccard < 0.25 ~ TRUE, .default = FALSE))
+  select(participant_id, profession_source, master_profession_original, Name_fr, Occupation_label, dist_jw, dist_jaccard, ISCO, ISCO_full) |> 
+  mutate(high_confidence = case_when(dist_jw < 0.07 | dist_jaccard < 0.2 ~ TRUE, .default = FALSE)) |> 
+  distinct() |> 
+  arrange(master_profession_original)
