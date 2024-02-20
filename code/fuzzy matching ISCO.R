@@ -79,8 +79,8 @@ rm(prof_stop, professions_fr) # remove intermediate objects
 
 
 # Read in our dataset ####
-# source(here("code","03_participants with profession data.R"))
-dat_master_professions_2 <- readRDS(here("output", "dat_master_professions_2.rds"))
+# source(here("code","03_participants with profession data.R")) # Source code to generate file
+dat_master_professions_2 <- readRDS(here("output", "dat_master_professions_2.rds")) # read pre-generated file
 
 ## Keep variables for assigning ISCO-08 codes ####
 # (key free-text information is sometimes in the master_profession, job_sector.st_22, job_sector_other.st_22 variables)
