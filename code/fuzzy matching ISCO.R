@@ -12,8 +12,8 @@ pacman::p_load(
 
 # French "stopwords" (common words) list to remove from professions
 stopwords_fr <- tibble(word = stopwords("fr")) |> 
-  filter(word != c("avions", "son", "non")) |> # remove these ones
-  add_row(word = c("l'", "d'")) |> # add these in
+  filter(!word %in% c("avions", "son", "non")) |> # remove these ones
+  # add_row(word = c("l'", "d'")) |> # add these in
   mutate(word = stri_trans_general(word, id = "Latin-ASCII")) # remove accents
 
 # Occupations from I14Y Swiss platform ####
@@ -41,24 +41,27 @@ professions <- professions_fr |>
     ISCO = Parent,
     Name_fr = str_to_lower(stri_trans_general(Name_fr, id = "Latin-ASCII")), # Make lowercase and remove accents
   ) |> 
-  # filter(!str_ends(ISCO, pattern = "00")) |> # remove codes ending in 00 -> we want minimum match to 3-digits
-  separate_longer_delim(Name_fr, delim = " | ") |> # Split the masculin / feminin versions into separate rows
   select(-c(Code, Parent)) |> 
   # Manually add some common abbreviations or other occupations that are not in the file
-  add_row(Name_fr = "assc", ISCO = 3221) |> 
-  add_row(Name_fr = "a.s.e", ISCO = 5322) |> 
-  add_row(Name_fr = "ase", ISCO = 5322) |> 
-  add_row(Name_fr = "administrateur", ISCO = 4110) |> 
-  add_row(Name_fr = "administratrice", ISCO = 4110) |> 
+  add_row(Name_fr = "assc | apprenti assc | apprentie assc", ISCO = 3221) |> 
+  add_row(Name_fr = "a.s.e | ase | apprenti ase | apprentie ase", ISCO = 5322) |> 
+  add_row(Name_fr = "administrateur | administratrice", ISCO = 4110) |> 
   add_row(Name_fr = "administratif", ISCO = 4419) |> 
   add_row(Name_fr = "assistant in international organisation", ISCO = 3412) |>
   add_row(Name_fr = "assistante d'ambassadeur", ISCO = 3412) |>
   add_row(Name_fr = "banque", ISCO = 42112) |>
+  add_row(Name_fr = "chauffeur bus | chauffeuse bus", ISCO = 83310) |>
+  add_row(Name_fr = "agent de surete | agente de surete", ISCO = 33550) |>
+  add_row(Name_fr = "asp2", ISCO = 54120) |>
   # add_row(Name_fr = "", ISCO = ) |> 
   # add_row(Name_fr = "", ISCO = ) |> 
   # add_row(Name_fr = "", ISCO = ) |> 
   # add_row(Name_fr = "", ISCO = ) |> 
   # add_row(Name_fr = "", ISCO = ) |> 
+  # add_row(Name_fr = "", ISCO = ) |> 
+  # add_row(Name_fr = "", ISCO = ) |> 
+  # add_row(Name_fr = "", ISCO = ) |> 
+  separate_longer_delim(Name_fr, delim = " | ") |> # Split the masculin / feminin versions into separate rows
   arrange(Name_fr) |> 
   rowid_to_column()
 
@@ -73,6 +76,7 @@ prof_stop <- professions |>
   select(-word) |> 
   distinct()
 
+# Merge back in with the professions object
 professions <- left_join(professions, prof_stop)
 
 rm(prof_stop, professions_fr) # remove intermediate objects
@@ -102,7 +106,9 @@ occup <- dat_master_professions_2 %>%
          ISCO = NA                                                               # Empty column that we'll fill in the next steps
   ) %>%
   mutate(
-    master_profession_original = master_profession,
+    #
+    master_profession_original = master_profession, # keep original separately
+    #
     master_profession = str_replace(master_profession, " rh| rh", " ressources humaines"),
     master_profession = str_replace(master_profession, " hr", " human resources"),
     master_profession = case_when(master_profession %in% c("rh") ~ " ressources humaines", .default = master_profession),
@@ -128,12 +134,12 @@ occup <- dat_master_professions_2 %>%
     
     # resquish in case spaces were introduced
     master_profession = str_squish(master_profession)
-    ) |> 
+  ) |> 
   add_count(master_profession, sort = TRUE) %>% 
   arrange(master_profession, desc(n)) |>
-  sample_n(2000) |> # Take a random sample of n rows (when trying things out, to save time)
+  sample_n(1000) |> # Take a random sample of n rows (when trying things out, to save time)
   select(participant_id, master_profession_original, master_profession, profession_source) |> 
-# Remove stopwords (trial)
+  # Remove stopwords (trial)
   mutate(master_profession = str_replace(master_profession, "l'|d'", "")) |> # remove the l' and d'
   unnest_tokens(word, master_profession) |> 
   anti_join(stopwords_fr) |> 
@@ -143,8 +149,8 @@ occup <- dat_master_professions_2 %>%
   select(-word) |> 
   #keep only distinct rows
   distinct() #|> 
-  # pivot_longer(cols = !participant_id, values_to = "profession", names_to = "source") |> 
-  # arrange(participant_id, profession, source)
+# pivot_longer(cols = !participant_id, values_to = "profession", names_to = "source") |> 
+# arrange(participant_id, profession, source)
 
 
 # Jaro-Winkler fuzzy matching ####
@@ -219,7 +225,7 @@ cleaner_matches_jaccard <- matches_jaccard |>
   mutate(
     NA_or_high_distance = case_when(
       is.na(ISCO)| # no match
-      dist_jaccard >= 0.35 ~ TRUE, # distance >= specified cutoff with Jaccard distance
+        dist_jaccard >= 0.35 ~ TRUE, # distance >= specified cutoff with Jaccard distance
       .default = FALSE)) |> 
   arrange(master_profession, participant_id, dist_jaccard) |>  # Arrange best match first for each participant_id
   group_by(participant_id) |> 
@@ -274,3 +280,5 @@ occup_final <- occup_matched |>
   mutate(high_confidence = case_when(dist_jw < 0.07 | dist_jaccard < 0.2 ~ TRUE, .default = FALSE)) |> 
   distinct() |> 
   arrange(master_profession_original)
+
+saveRDS(occup_final, file = here("output", paste0(format(Sys.time(), "%Y-%m-%d-%H%M_"),"classified_occupations.rds")))
