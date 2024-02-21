@@ -1,4 +1,12 @@
-occup_final_a <- occup_final |> filter(is.na(ISCO))
+pacman::p_load(here, tidyverse)
+
+if (file.exists(here("output", "fuzzy_classified_occupations_to_clean.rds"))) {
+  occup_final <- readRDS(here("output", "fuzzy_classified_occupations_to_clean.rds"))
+  remaining_bad_matches <- readRDS(here("output", "remaining_bad_matches.rds"))
+} else {
+  source(here("code", "04a_make_fuzzy_classifications.R"))
+  } 
+  
 occup_final_cleaned <- occup_final |> 
   mutate(ISCO_new = case_when(
     # 
@@ -8,7 +16,8 @@ occup_final_cleaned <- occup_final |>
     ### Managing directors and chief executives ####
     master_profession_original %in% c("") ~ 112,
     ### Business services and administration managers ####
-    master_profession_original %in% c("") ~ 121,
+    #### Human Resources managers ####
+    master_profession_original %in% c("administratrice ressources humaines") ~ 1212,
     ### Sales, marketing and development managers ####
     master_profession_original %in% c("") ~ 122,
     ### Production managers in agriculture, forestry and fisheries ####
@@ -129,13 +138,13 @@ occup_final_cleaned <- occup_final |>
     master_profession_original %in% c("") ~ 233,
     master_profession_original %in% c("") ~ 234,
     master_profession_original %in% c("") ~ 235,
-    master_profession_original %in% c("") ~ 241,
+    master_profession_original %in% c("administratif financier") ~ 241,
     master_profession_original %in% c("") ~ 242,
     master_profession_original %in% c("") ~ 243,
     master_profession_original %in% c("") ~ 251,
     master_profession_original %in% c("") ~ 252,
     ## Legal, social and cultural professionals ####
-    master_profession_original %in% c("") ~ 261,
+    master_profession_original %in% c("analyste en criminalite") ~ 2619,
     master_profession_original %in% c("") ~ 262,
     ### Social and religious professionals ####
     #### Psychologists ####
@@ -192,7 +201,7 @@ occup_final_cleaned <- occup_final |>
       "sante travail", "specialiste de sante au travail", "assistante dentaire",
       "assistants en medecine dentaire", "hygieniste dentaire", "hygienistes dentaires",
       "hygieniste dentaire (desolee, je ne sais pas dans quelle categorie je dois le classer)",
-      "opticien"
+      "opticien", "assistance maternel"
     ) ~ 325,
     ####  Ambulance workers ####
     master_profession_original %in% c(
@@ -228,7 +237,7 @@ occup_final_cleaned <- occup_final |>
     master_profession_original %in% c("") ~ 422,
     master_profession_original %in% c("") ~ 431,
     master_profession_original %in% c("disposante") ~ 432,
-    master_profession_original %in% c("") ~ 441,
+    master_profession_original %in% c("achats") ~ 441,
     master_profession_original %in% c("") ~ 511,
     master_profession_original %in% c("") ~ 512,
     master_profession_original %in% c("") ~ 513,
@@ -300,9 +309,9 @@ occup_final_cleaned <- occup_final |>
     master_profession_original %in% c("") ~ 011,
     master_profession_original %in% c("") ~ 021,
     master_profession_original %in% c("") ~ 031,
-    master_profession_original %in% c("") ~ -999,
+    master_profession_original %in% c("actuellement mere au foyer - avant banquiere") ~ -999,
     
     
     .default = ISCO_full
   )
-  )
+  ) |> filter(is.na(ISCO)) |> arrange(master_profession_original)
