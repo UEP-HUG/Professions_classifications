@@ -67,7 +67,7 @@ professions <- rbind(professions_fr, professions_en) |>
   add_row(Name_fr = "asp2", ISCO = 54120) |>
   add_row(Name_fr = "gestionnaire ressources humaines", ISCO = 12120) |>
   add_row(Name_fr = "femme au foyer | mere au foyer", ISCO = -999) |>
-  # add_row(Name_fr = "", ISCO = ) |> 
+  add_row(Name_fr = "petite enfance", ISCO = 2342) |>
   # add_row(Name_fr = "", ISCO = ) |> 
   # add_row(Name_fr = "", ISCO = ) |> 
   # add_row(Name_fr = "", ISCO = ) |> 
@@ -121,7 +121,8 @@ occup <- dat_master_professions_2 %>%
     master_profession = str_replace(master_profession, "\\brh\\b", "ressources humaines"),
     master_profession = str_replace(master_profession, "\\bhr\\b", "human resources"),
     # master_profession = case_when(master_profession %in% c("rh") ~ " ressources humaines", .default = master_profession),
-    master_profession = str_replace(master_profession, "\\bl'onu\\b|\\bl'oms\\b|\\bonu\\b|\\boms\\b|\\bunited nations\\b", "organisation international"),
+    master_profession = str_replace(master_profession, "\\bl'onu\\b|\\bl'oms\\b|\\bonu\\b|\\boms\\b|\\bunited nations\\b|\\bong\\b", 
+                                    "organisation international"),
     master_profession = str_replace(master_profession, "infitmier", "infirmier"),
     master_profession = str_replace(master_profession, "couffeuse", "coiffeuse"),
     master_profession = str_replace(master_profession, "projer", "projet"),
@@ -144,7 +145,7 @@ occup <- dat_master_professions_2 %>%
   ) |> 
   add_count(master_profession, sort = TRUE) %>% 
   arrange(master_profession, desc(n)) |>
-  sample_n(500) |> # Take a random sample of n rows (when trying things out, to save time)
+  # sample_n(1000) |> # Take a random sample of n rows (when trying things out, to save time)
   select(participant_id, master_profession_original, master_profession, profession_source) |> 
   # Remove stopwords (trial)
   mutate(master_profession = str_replace(master_profession, "l'|d'", "")) |> # remove the l' and d'
@@ -208,7 +209,7 @@ matches_jaccard_prep <- bad_matches_jw |>
   select(-Name_fr_jw, -id_index, -dist_jaccard)
 
 ## Run the Jaccard matching ####
-start <- Sys.time() ; matches_jaccard <- fuzzyjoin::stringdist_left_join(
+start <- Sys.time() ; print(paste(start, " --> Processing full dataset takes about 25 mins")); matches_jaccard <- fuzzyjoin::stringdist_left_join(
   x = matches_jaccard_prep,
   y = professions,
   by = c(master_profession = "Name_fr_2"), # Match against the stopwords removed versions
