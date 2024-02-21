@@ -3,12 +3,19 @@ pacman::p_load(
   here,
   data.table,
   fuzzyjoin,
-  # fuzzywuzzy,
-  # stringdist,
+  # fuzzywuzzy, # Alternative package for fuzzy joins
+  # stringdist, # This is that package used by the fuzzyjoin package
   stopwords, # package with list of stopwords
   tidytext,
   stringi
 )
+
+# Read in dat_master_professions_2.rds
+if (file.exists(here("output", "dat_master_professions_2.rds"))) {
+  dat_master_professions_2 <- readRDS(here("output", "dat_master_professions_2.rds"))
+} else {
+  source(here("code","03_participants with profession data.R"))
+} 
 
 # French "stopwords" (common words) list to remove from professions
 stopwords_fr <- tibble(word = stopwords("fr")) |> 
@@ -28,12 +35,17 @@ stopwords_fr <- tibble(word = stopwords("fr")) |>
 # Statut de la profession: Actuel
 # Doublons: Sans doublons
 
+# French professions
 professions_fr <- fread(here("data", "HCL_CH_ISCO_19_PROF_1_2_level_6.csv"))
+# English professions
+professions_en <- fread(here("data", "HCL_CH_ISCO_19_PROF_1_2_level_6_en.csv")) |> 
+  rename(Name_fr = Name_en)
+
 # professions_fr_5 <- fread(here("data", "HCL_CH_ISCO_19_PROF_1_2_level_5.csv")) |> arrange(Parent)
 # professions_fr_3 <- fread(here("data", "HCL_CH_ISCO_19_PROF_1_2_levels_3-6.csv"))
 
 ## Transform strings and codes for fuzzy matching ####
-professions <- professions_fr |> 
+professions <- rbind(professions_fr, professions_en) |> 
   # Remove military codes that start with 0 (here they are the ones only with 4 digits)
   filter(str_length(Parent)>4) |> 
   mutate(
@@ -53,8 +65,8 @@ professions <- professions_fr |>
   add_row(Name_fr = "chauffeur bus | chauffeuse bus", ISCO = 83310) |>
   add_row(Name_fr = "agent de surete | agente de surete", ISCO = 33550) |>
   add_row(Name_fr = "asp2", ISCO = 54120) |>
-  # add_row(Name_fr = "", ISCO = ) |> 
-  # add_row(Name_fr = "", ISCO = ) |> 
+  add_row(Name_fr = "gestionnaire ressources humaines", ISCO = 12120) |>
+  add_row(Name_fr = "femme au foyer | mere au foyer", ISCO = -999) |>
   # add_row(Name_fr = "", ISCO = ) |> 
   # add_row(Name_fr = "", ISCO = ) |> 
   # add_row(Name_fr = "", ISCO = ) |> 
@@ -79,13 +91,10 @@ prof_stop <- professions |>
 # Merge back in with the professions object
 professions <- left_join(professions, prof_stop)
 
-rm(prof_stop, professions_fr) # remove intermediate objects
+rm(prof_stop, professions_fr, professions_en) # remove intermediate objects
 
 
-# Read in our dataset ####
-# source(here("code","03_participants with profession data.R")) # Source code to generate file
-dat_master_professions_2 <- readRDS(here("output", "dat_master_professions_2.rds")) # read pre-generated file
-
+# Clean up profession entries for matching ####
 ## Keep variables for assigning ISCO-08 codes ####
 # (key free-text information is sometimes in the master_profession, job_sector.st_22, job_sector_other.st_22 variables)
 occup <- dat_master_professions_2 %>% 
@@ -108,25 +117,23 @@ occup <- dat_master_professions_2 %>%
   mutate(
     #
     master_profession_original = master_profession, # keep original separately
-    #
-    master_profession = str_replace(master_profession, " rh| rh", " ressources humaines"),
-    master_profession = str_replace(master_profession, " hr", " human resources"),
-    master_profession = case_when(master_profession %in% c("rh") ~ " ressources humaines", .default = master_profession),
-    master_profession = str_replace(master_profession, "l'onu|l'oms| onu | oms |united nations", " organisation international"),
-    master_profession = case_when(master_profession %in% c("onu", "oms") ~ "organisation international", .default = master_profession),
+    # use "\\b" on each side of a string to indicate that the match should be on a whole word
+    master_profession = str_replace(master_profession, "\\brh\\b", "ressources humaines"),
+    master_profession = str_replace(master_profession, "\\bhr\\b", "human resources"),
+    # master_profession = case_when(master_profession %in% c("rh") ~ " ressources humaines", .default = master_profession),
+    master_profession = str_replace(master_profession, "\\bl'onu\\b|\\bl'oms\\b|\\bonu\\b|\\boms\\b|\\bunited nations\\b", "organisation international"),
     master_profession = str_replace(master_profession, "infitmier", "infirmier"),
     master_profession = str_replace(master_profession, "couffeuse", "coiffeuse"),
     master_profession = str_replace(master_profession, "projer", "projet"),
     master_profession = str_replace(master_profession, "consierge", "concierge"),
     master_profession = str_replace(master_profession, "coseiller", "conseiller"),
     master_profession = str_replace(master_profession, "medevin", "medecin"),
-    master_profession = str_replace(master_profession, "prof |prof.", "professeur"),
-    master_profession = str_replace(master_profession, " resp |responsabke", "responsable"),
+    master_profession = str_replace(master_profession, "\\bprof\\b|prof.", "professeur"),
+    master_profession = str_replace(master_profession, "\\bresp\\b|responsabke", "responsable"),
     master_profession = str_replace(master_profession, "tpg", "bus"),
-    master_profession = str_replace(master_profession, " ems", " etablissement medico social"),
-    master_profession = case_when(master_profession %in% c("ems") ~ "etablissement medico social", .default = master_profession),
-    master_profession = str_replace(master_profession, " hets", " travail social"),
-    # master_profession = str_replace(master_profession, "", ""),
+    master_profession = str_replace(master_profession, "\\bems\\b", "etablissement medico social"),
+    master_profession = str_replace(master_profession, "\\bhets\\b", "travail social"),
+    master_profession = str_replace(master_profession, ".", " "),
     # master_profession = str_replace(master_profession, "", ""),
     # master_profession = str_replace(master_profession, "", ""),
     # master_profession = str_replace(master_profession, "", ""),
@@ -137,7 +144,7 @@ occup <- dat_master_professions_2 %>%
   ) |> 
   add_count(master_profession, sort = TRUE) %>% 
   arrange(master_profession, desc(n)) |>
-  sample_n(1000) |> # Take a random sample of n rows (when trying things out, to save time)
+  sample_n(500) |> # Take a random sample of n rows (when trying things out, to save time)
   select(participant_id, master_profession_original, master_profession, profession_source) |> 
   # Remove stopwords (trial)
   mutate(master_profession = str_replace(master_profession, "l'|d'", "")) |> # remove the l' and d'
@@ -166,8 +173,6 @@ start <- Sys.time() ; matches_jw <- fuzzyjoin::stringdist_left_join(
   group_by(participant_id) |>
   slice_min(order_by=dist_jw, n=5);end <- Sys.time() ; print(end-start)
 
-# hold_matches <- matches_jaccard
-
 # If the top match has a distance lower than 0.1 (or whatever number to be specified), I want to keep only the top match and remove all secondary matches. Otherwise, I want to keep all matches for downstream visual screening and manual classification.
 cleaner_matches_jw <- matches_jw |> 
   # Add a column we can use to screen "low-quality" or no matches
@@ -190,11 +195,7 @@ cleaner_matches_jw <- matches_jw |>
   tidyr::fill(group_top_match, .direction = "down") |> # Fill the variable down to the whole group
   filter(!(group_top_match == "Good" & id_index != 1)) # Remove secondary matches when a top match is "Good"
 
-# saveRDS(matches_jw, file = paste0(here("output"), "/", "fuzzy_matched_occupations_a.rds"))
-# saveRDS(cleaner_matches_jw, file = paste0(here("output"), "/", "fuzzy_matched_occupations_cleaned_b.rds"))
-
-# cleaner_matches_jw |> filter(group_top_match == "Not good") |> count(participant_id)
-
+## Get the good /bad matches ####
 good_matches_jw <- cleaner_matches_jw |> filter(group_top_match == "Good")
 bad_matches_jw <- cleaner_matches_jw |> filter(group_top_match == "Not good")
 
@@ -219,7 +220,7 @@ start <- Sys.time() ; matches_jaccard <- fuzzyjoin::stringdist_left_join(
   # Keep the n best matches (least "distance")
   slice_min(order_by=dist_jaccard, n=5) ;end <- Sys.time() ; print(end-start)
 
-## Clean up matches
+## Clean up matches ####
 cleaner_matches_jaccard <- matches_jaccard |> 
   # Add a column we can use to screen "low-quality" or no matches
   mutate(
@@ -240,24 +241,30 @@ cleaner_matches_jaccard <- matches_jaccard |>
   tidyr::fill(group_top_match, .direction = "down") |> # Fill the variable down to the whole group
   filter(!(group_top_match == "Good" & id_index != 1)) # Remove secondary matches when a top match is "Good"
 
+## Separate to good / bad matches ####
 good_matches_jaccard <- cleaner_matches_jaccard |> filter(group_top_match == "Good")
-bad_matches_jaccard <- cleaner_matches_jaccard |> filter(group_top_match == "Not good") 
+bad_matches_jaccard <- cleaner_matches_jaccard |> filter(group_top_match == "Not good")
+
+## Get the ones that have a common match for JW and Jaccard ####
 better_bad_matches_jaccard <- bad_matches_jaccard |> 
-  mutate(similar_ISCO = str_sub(ISCO_jw, 1,2) == str_sub(ISCO, 1,2)) |> 
+  mutate(similar_ISCO = str_sub(ISCO_jw, 1,3) == str_sub(ISCO, 1,3)) |> 
   filter(similar_ISCO) |> 
   group_by(participant_id) |> 
   slice_min(id_index) |> 
   arrange(master_profession)
-remaining_bad_matches_jaccard <- anti_join(bad_matches_jaccard, better_bad_matches_jaccard, by = "participant_id")
+remaining_bad_matches <- anti_join(bad_matches_jaccard, better_bad_matches_jaccard, by = "participant_id")
 
 
 # Put together the results from the different matching strategies ####
-good_matches_jw <- good_matches_jw |> select(participant_id, Name_fr, ISCO, dist_jw, dist_jaccard)
-good_matches_jaccard <- good_matches_jaccard |> select(participant_id, Name_fr, ISCO, dist_jw, dist_jaccard)
-better_bad_matches_jaccard <- better_bad_matches_jaccard |> select(participant_id, Name_fr, ISCO, dist_jw, dist_jaccard)
+good_matches_jw_clean <- good_matches_jw |> select(participant_id, Name_fr, ISCO, dist_jw, dist_jaccard) |> 
+  mutate(confidence = "High")
+good_matches_jaccard_clean <- good_matches_jaccard |> select(participant_id, Name_fr, ISCO, dist_jw, dist_jaccard) |> 
+  mutate(confidence = "High")
+better_bad_matches_jaccard_clean <- better_bad_matches_jaccard |> select(participant_id, Name_fr, ISCO, dist_jw, dist_jaccard) |> 
+  mutate(confidence = "Low")
 
 ## Combine good matches ####
-all_good_matches <- rbind(good_matches_jw, good_matches_jaccard, better_bad_matches_jaccard)
+all_good_matches <- rbind(good_matches_jw_clean, good_matches_jaccard_clean, better_bad_matches_jaccard_clean)
 
 ## Merge with occup file ####
 occup_matched <- left_join(occup, all_good_matches, by = "participant_id") |> 
@@ -276,9 +283,10 @@ occ_labels <- readxl::read_xlsx(here("data", "do-e-00-isco08-01.xlsx"), # read i
 occup_final <- occup_matched |> 
   left_join(occ_labels) %>%                      # Merge with ISCO occupations file
   relocate(Occupation_label, .after = master_profession) |> 
-  select(participant_id, profession_source, master_profession_original, Name_fr, Occupation_label, dist_jw, dist_jaccard, ISCO, ISCO_full) |> 
-  mutate(high_confidence = case_when(dist_jw < 0.07 | dist_jaccard < 0.2 ~ TRUE, .default = FALSE)) |> 
+  select(participant_id, profession_source, master_profession_original, Name_fr, Occupation_label, dist_jw, dist_jaccard, confidence, ISCO, ISCO_full) |> 
+  mutate(confidence = case_when(dist_jaccard > 0.2 & confidence == "High" ~ "Medium", .default = confidence)) |> 
   distinct() |> 
   arrange(master_profession_original)
 
-saveRDS(occup_final, file = here("output", paste0(format(Sys.time(), "%Y-%m-%d-%H%M_"),"classified_occupations.rds")))
+saveRDS(occup_final, file = here("output", "fuzzy_classified_occupations_to_clean.rds"))
+saveRDS(remaining_bad_matches, file = here("output", "remaining_bad_matches.rds"))
