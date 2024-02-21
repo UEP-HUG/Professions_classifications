@@ -253,7 +253,7 @@ occup_final_cleaned <- occup_final |>
     
     ### Business and administration associate professionals ####
     master_profession_original %in% c("") ~ 331,
-    master_profession_original %in% c("") ~ 332,
+    master_profession_original %in% c("account director", "acheteuse assitante commerciale") ~ 332,
     master_profession_original %in% c("") ~ 333,
     master_profession_original %in% c("coordinatrice de secteur") ~ 334,
     #### Regulatory government associate professionals ####
@@ -270,7 +270,7 @@ occup_final_cleaned <- occup_final |>
     master_profession_original %in% c("") ~ 342,
     master_profession_original %in% c("enseignant d'education physique") ~ 3422,
     #### Artistic, cultural and culinary associate professionals ####
-    master_profession_original %in% c("") ~ 343,
+    master_profession_original %in% c("accueil musee") ~ 343,
     #### Information and communications technicians ####
     master_profession_original %in% c("") ~ 351,
     master_profession_original %in% c("") ~ 352,
@@ -298,6 +298,7 @@ occup_final_cleaned <- occup_final |>
     master_profession_original %in% c("") ~ 512,
     master_profession_original %in% c("") ~ 513,
     master_profession_original %in% c("") ~ 514,
+    str_detect(master_profession_original, "coiffeuse") ~ 5141,
     master_profession_original %in% c("") ~ 515,
     #### Other personal services workers ####
     # master_profession_original %in% c("astro-psychologue") ~ 516,
@@ -308,11 +309,12 @@ occup_final_cleaned <- occup_final |>
     master_profession_original %in% c("") ~ 524,
     ### Personal Care workers ####
     ##### Child care workers and teachers' aides ####
-    # (str_detect(master_profession_original, "accueil") & str_detect(master_profession_original, "familial")) | 
-    #   master_profession_original %in% c("") ~ 531,
+    (str_detect(master_profession_original, "accueil") & str_detect(master_profession_original, "familial")) |
+      master_profession_original %in% c("acceuillante familiale a la journee") ~ 5311,
     ##### Personal care workers in health services ####
     # (str_detect(master_profession_original, "aid") & str_detect(master_profession_original, "soign")) | 
     #   master_profession_original %in% c("auxiliaire de sante", "auxiliaire de sante dans un ems") ~ 532,
+    master_profession_original %in% c("a$e", "accompagnante, aide a domicile", "accompagnant") ~ 5322,
     ### Protective services workers ####
     master_profession_original %in% c("") ~ 541,
     
@@ -338,6 +340,7 @@ occup_final_cleaned <- occup_final |>
     master_profession_original %in% c("") ~ 713,
     ### Metal, machinery and related trades workers ####
     master_profession_original %in% c("") ~ 721,
+    master_profession_original %in% c("cableur") ~ 7215,
     master_profession_original %in% c("") ~ 722,
     master_profession_original %in% c("") ~ 723,
     ### Handicraft and printing workers ####
@@ -403,7 +406,7 @@ occup_final_cleaned <- occup_final |>
     .default = ISCO_full
   )) |>
   # update the remaining_bad_matches object for reference
-  arrange(master_profession_original) ; remaining_bad_matches <- inner_join(remaining_bad_matches, occup_final_cleaned |> filter(is.na(ISCO_new)) |> select(participant_id), by = "participant_id")
+  arrange(master_profession_original) ; remaining_bad_matches <- inner_join(remaining_bad_matches, occup_final_cleaned |> filter(is.na(ISCO_new)) |> select(participant_id), by = "participant_id") |> arrange(master_profession_original, participant_id)
   
   
   # Merge with ISCO labels file ####
