@@ -95,7 +95,7 @@ occup_final_cleaned <- occup_final |>
     master_profession_original %in% c("") ~ 215,
     #### Architects, planners, surveyors and designers ####
     master_profession_original %in% c("concepteurs graphiques, multimedia - graphistes") ~ 216,
-    
+    master_profession_original %in% c("ing transports") ~ 2164,
     ### Health Professionals ####
     #### Medical doctors ####
     ##### General practitioners ####

@@ -120,6 +120,7 @@ occup <- dat_master_professions_2 %>%
     master_profession = str_replace_all(master_profession, "\\.", ""),
     master_profession = str_replace(master_profession, "l'|d'", ""),  # remove the l' and d'
     # use "\\b" on each side of a string to indicate that the match should be on a whole word
+    master_profession = str_replace(master_profession, "r&d", "recherche et developpement"),
     master_profession = str_replace(master_profession, "\\brh\\b", "ressources humaines"),
     master_profession = str_replace(master_profession, "\\bsup\\b", "superieur"),
     master_profession = str_replace(master_profession, "\\bhr\\b", "human resources"),
