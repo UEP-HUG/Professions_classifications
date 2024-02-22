@@ -117,11 +117,14 @@ occup <- dat_master_professions_2 %>%
   mutate(
     #
     master_profession_original = master_profession, # keep original separately
+    master_profession = str_replace_all(master_profession, "\\.", ""),
+    master_profession = str_replace(master_profession, "l'|d'", ""),  # remove the l' and d'
     # use "\\b" on each side of a string to indicate that the match should be on a whole word
     master_profession = str_replace(master_profession, "\\brh\\b", "ressources humaines"),
+    master_profession = str_replace(master_profession, "\\bsup\\b", "superieur"),
     master_profession = str_replace(master_profession, "\\bhr\\b", "human resources"),
-    # master_profession = case_when(master_profession %in% c("rh") ~ " ressources humaines", .default = master_profession),
-    master_profession = str_replace(master_profession, "\\bl'onu\\b|\\bl'oms\\b|\\bonu\\b|\\boms\\b|\\bunited nations\\b|\\bong\\b", 
+    master_profession = str_replace(master_profession, "\\badmin\\b", "administrative"),
+    master_profession = str_replace(master_profession, "\\bonu\\b|\\boms\\b|\\bunited nations\\b|\\bong\\b",
                                     "organisation international"),
     master_profession = str_replace(master_profession, "infitmier", "infirmier"),
     master_profession = str_replace(master_profession, "couffeuse", "coiffeuse"),
@@ -129,16 +132,15 @@ occup <- dat_master_professions_2 %>%
     master_profession = str_replace(master_profession, "consierge", "concierge"),
     master_profession = str_replace(master_profession, "coseiller", "conseiller"),
     master_profession = str_replace(master_profession, "medevin", "medecin"),
-    master_profession = str_replace(master_profession, "\\bprof\\b|prof.", "professeur"),
+    master_profession = str_replace(master_profession, "\\bprof\\b", "professeur"),
     master_profession = str_replace(master_profession, "\\bresp\\b|responsabke", "responsable"),
     master_profession = str_replace(master_profession, "tpg", "bus"),
     master_profession = str_replace(master_profession, "\\bems\\b", "etablissement medico social"),
     master_profession = str_replace(master_profession, "\\bhets\\b", "travail social"),
-    master_profession = str_replace(master_profession, ".", " "),
-    # master_profession = str_replace(master_profession, "", ""),
-    # master_profession = str_replace(master_profession, "", ""),
-    # master_profession = str_replace(master_profession, "", ""),
-    # master_profession = str_replace(master_profession, "", ""),
+    # # master_profession = str_replace(master_profession, "", ""),
+    # # master_profession = str_replace(master_profession, "", ""),
+    # # master_profession = str_replace(master_profession, "", ""),
+    # # master_profession = str_replace(master_profession, "", ""),
     
     # resquish in case spaces were introduced
     master_profession = str_squish(master_profession)
@@ -148,7 +150,6 @@ occup <- dat_master_professions_2 %>%
   # sample_n(1000) |> # Take a random sample of n rows (when trying things out, to save time)
   select(participant_id, master_profession_original, master_profession, profession_source) |> 
   # Remove stopwords (trial)
-  mutate(master_profession = str_replace(master_profession, "l'|d'", "")) |> # remove the l' and d'
   unnest_tokens(word, master_profession) |> 
   anti_join(stopwords_fr) |> 
   group_by(participant_id) |>
@@ -253,7 +254,8 @@ better_bad_matches_jaccard <- bad_matches_jaccard |>
   group_by(participant_id) |> 
   slice_min(id_index) |> 
   arrange(master_profession)
-remaining_bad_matches <- anti_join(bad_matches_jaccard, better_bad_matches_jaccard, by = "participant_id")
+remaining_bad_matches <- anti_join(bad_matches_jaccard, better_bad_matches_jaccard, by = "participant_id") |> select(-rowid) |> 
+  relocate(c(master_profession, Name_fr, ISCO, Name_fr_2_jw, ISCO_jw, dist_jaccard, dist_jw), .after = master_profession_original)
 
 
 # Put together the results from the different matching strategies ####
