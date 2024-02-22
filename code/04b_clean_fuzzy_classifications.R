@@ -1,12 +1,21 @@
 pacman::p_load(here, tidyverse)
 
 # Read in files ####
-if (file.exists(here("output", "fuzzy_classified_occupations_to_clean.rds"))) {
-  occup_final <- readRDS(here("output", "fuzzy_classified_occupations_to_clean.rds"))
+if (file.exists(here("output", "fuzzy_classified_occupations_to_clean_2024-02-21.rds"))) {
+  occup_final <- readRDS(here("output", "fuzzy_classified_occupations_to_clean_2024-02-21.rds"))
   remaining_bad_matches <- readRDS(here("output", "remaining_bad_matches.rds"))
 } else {
   source(here("code", "04a_make_fuzzy_classifications.R"))
 } 
+## Read in ISCO labels ####
+occ_labels <- readxl::read_xlsx(here("data", "do-e-00-isco08-01.xlsx"), # read in occupation titles based on ISCO code
+                                sheet = "ISCO-08 English version") %>% drop_na() %>% mutate(ISCO = as.numeric(ISCO)) %>% 
+  filter(!str_detect(Occupation_label, "armed forces|Armed forces")) # Remove armed services as their numbers cause weirdness and we don't have them in our dataset
+
+
+# Count the number of participants that are categorized
+occup_final |> filter(!is.na(ISCO)) |> distinct() |> summarise(n = n_distinct(participant_id))
+
 
 # Manually assign ISCO codes ####
 occup_final_cleaned <- occup_final |> 
@@ -26,7 +35,7 @@ occup_final_cleaned <- occup_final |>
     #### Business services and administration managers ####
     master_profession_original %in% c("chief risk officer", "gerant d'investissements") ~ 121,
     ##### Finance managers ####
-    master_profession_original %in% c("chef de service service financier") ~ 1211,
+    master_profession_original %in% c("chef de service service financier", "cfo") ~ 1211,
     ##### Human Resources managers ####
     master_profession_original %in% c("administratrice ressources humaines", "cheffe de service rh") ~ 1212,
     ##### Business services and administration managers not elsewhere classified ####
@@ -70,7 +79,7 @@ occup_final_cleaned <- occup_final |>
     
     ## **Professionals** ####
     ### Not easy to classify ####
-    master_profession_original %in% c("chercheur doctorant") ~ 2000,
+    master_profession_original %in% c("chercheur doctorant", "adjoint scientifique") ~ 2000,
     ### Science and engineering professionals ####
     #### Physical and earth science professionals ####
     master_profession_original %in% c("") ~ 211,
@@ -291,10 +300,11 @@ occup_final_cleaned <- occup_final |>
     master_profession_original %in% c("disposante", "coordinateur logistique") ~ 432,
     ### Other clerical support workers ####
     master_profession_original %in% c("achats") ~ 441,
-    
+    str_detect(master_profession_original, "adjointe administrative - support rh") ~ 4416,
     ## **Service and sales workers** ####
     ### Personal service workers ####
     master_profession_original %in% c("") ~ 511,
+    str_detect(master_profession_original, "agent d'escale|agente d'escale") ~ 5111,
     master_profession_original %in% c("") ~ 512,
     master_profession_original %in% c("") ~ 513,
     master_profession_original %in% c("") ~ 514,
@@ -400,17 +410,23 @@ occup_final_cleaned <- occup_final |>
     master_profession_original %in% c("") ~ 031,
     
     ## **Not possible to define** ####
-    master_profession_original %in% c("actuellement mere au foyer - avant banquiere") ~ -999,
+    master_profession_original %in% c(
+      "actuellement mere au foyer - avant banquiere", "au foyer",
+      "aucun", "aucune",
+                                      ) ~ -999,
     
     
-    .default = ISCO_full
+    .default = NA
   )) |>
+  mutate(confidence = case_when(!is.na(ISCO_new) ~ "High", .default = confidence),
+         ISCO = case_when(is.na(ISCO_new) ~ ISCO, .default = as.integer(str_sub(ISCO_new, start = 1, end = 4)))) |> 
+  select(-Occupation_label) |> 
+  left_join(occ_labels) |>                       # Merge with ISCO occupations file
+  relocate(Occupation_label, .after = Name_fr) |> 
   # update the remaining_bad_matches object for reference
-  arrange(master_profession_original) ; remaining_bad_matches <- inner_join(remaining_bad_matches, occup_final_cleaned |> filter(is.na(ISCO_new)) |> select(participant_id), by = "participant_id") |> arrange(master_profession_original, participant_id)
-  
-  
-  # Merge with ISCO labels file ####
-  ## Read in ISCO labels ####
-  occ_labels <- readxl::read_xlsx(here("data", "do-e-00-isco08-01.xlsx"), # read in occupation titles based on ISCO code
-                                  sheet = "ISCO-08 English version") %>% drop_na() %>% mutate(ISCO = as.numeric(ISCO)) %>% 
-    filter(!str_detect(Occupation_label, "armed forces|Armed forces")) # Remove armed services as their numbers cause weirdness and we don't have them in our dataset
+  arrange(master_profession_original) ; remaining_bad_matches <- inner_join(
+    remaining_bad_matches, occup_final_cleaned |> 
+      filter(is.na(ISCO)) |> 
+      select(participant_id), by = "participant_id") |> 
+  arrange(master_profession_original, participant_id) ; occup_final_cleaned |> filter(!is.na(ISCO)) |> distinct() |> 
+  summarise(n = n_distinct(participant_id))
