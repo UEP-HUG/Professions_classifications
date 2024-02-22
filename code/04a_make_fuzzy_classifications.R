@@ -36,18 +36,27 @@ stopwords_fr <- tibble(word = stopwords("fr")) |>
 # Doublons: Sans doublons
 
 # French professions
-professions_fr <- fread(here("data", "HCL_CH_ISCO_19_PROF_1_2_level_6.csv"))
+professions_fr <- fread(here("data", "HCL_CH_ISCO_19_PROF_1_2_level_6.csv")) |> 
+  filter(str_length(Parent)>4)
 # English professions
 professions_en <- fread(here("data", "HCL_CH_ISCO_19_PROF_1_2_level_6_en.csv")) |> 
-  rename(Name_fr = Name_en)
+  rename(Name_fr = Name_en) |> 
+  filter(str_length(Parent)>4)
 
-# professions_fr_5 <- fread(here("data", "HCL_CH_ISCO_19_PROF_1_2_level_5.csv")) |> arrange(Parent)
+professions_fr_5 <- fread(here("data", "HCL_CH_ISCO_19_PROF_1_2_level_5.csv")) |> 
+  arrange(Parent) |> 
+  filter(
+    str_length(Parent)>3,
+    # remove codes ending in 00 or 000
+    !str_ends(Parent, pattern = "00|000")
+  ) |> 
+  mutate(Name_fr = str_remove(Name_fr, "\\bsip\\b"))
+
 # professions_fr_3 <- fread(here("data", "HCL_CH_ISCO_19_PROF_1_2_levels_3-6.csv"))
 
 ## Transform strings and codes for fuzzy matching ####
-professions <- rbind(professions_fr, professions_en) |> 
+professions <- rbind(professions_fr, professions_en, professions_fr_5) |>
   # Remove military codes that start with 0 (here they are the ones only with 4 digits)
-  filter(str_length(Parent)>4) |> 
   mutate(
     # ISCO = as.integer(str_sub(Parent, start = 1, end = 4)), # Keep only first 4 digits of ISCO-08 code
     ISCO = Parent,
@@ -64,7 +73,7 @@ professions <- rbind(professions_fr, professions_en) |>
   add_row(Name_fr = "banque", ISCO = 42112) |>
   add_row(Name_fr = "chauffeur bus | chauffeuse bus", ISCO = 83310) |>
   add_row(Name_fr = "agent de surete | agente de surete", ISCO = 33550) |>
-  add_row(Name_fr = "asp2", ISCO = 54120) |>
+  add_row(Name_fr = "asp2 | asp 2", ISCO = 54120) |>
   add_row(Name_fr = "gestionnaire ressources humaines", ISCO = 12120) |>
   add_row(Name_fr = "femme au foyer | mere au foyer", ISCO = -999) |>
   add_row(Name_fr = "petite enfance", ISCO = 2342) |>
@@ -91,7 +100,7 @@ prof_stop <- professions |>
 # Merge back in with the professions object
 professions <- left_join(professions, prof_stop)
 
-rm(prof_stop, professions_fr, professions_en) # remove intermediate objects
+rm(prof_stop, professions_fr, professions_en, professions_fr_5) # remove intermediate objects
 
 
 # Clean up profession entries for matching ####
