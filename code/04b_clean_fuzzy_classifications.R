@@ -1,8 +1,10 @@
 pacman::p_load(here, tidyverse)
 
 # Read in files ####
-if (file.exists(here("output", "fuzzy_classified_occupations_to_clean_2024-02-22.rds"))) {
-  occup_final <- readRDS(here("output", "fuzzy_classified_occupations_to_clean_2024-02-22.rds"))
+
+## Read in the fuzzy matches dataset that needs to be cleaned ####
+if (file.exists(here("output", "fuzzy_classified_occupations_to_clean.rds"))) {
+  occup_final <- readRDS(here("output", "fuzzy_classified_occupations_to_clean.rds"))
   remaining_bad_matches <- readRDS(here("output", "remaining_bad_matches.rds"))
 } else {
   source(here("code", "04a_make_fuzzy_classifications.R"))
@@ -11,7 +13,6 @@ if (file.exists(here("output", "fuzzy_classified_occupations_to_clean_2024-02-22
 occ_labels <- readxl::read_xlsx(here("data", "do-e-00-isco08-01.xlsx"), # read in occupation titles based on ISCO code
                                 sheet = "ISCO-08 English version") %>% drop_na() %>% mutate(ISCO = as.numeric(ISCO)) %>% 
   filter(!str_detect(Occupation_label, "armed forces|Armed forces")) # Remove armed services as their numbers cause weirdness and we don't have them in our dataset
-
 
 # Count the number of participants that are categorized
 occup_final |> filter(!is.na(ISCO)) |> distinct() |> summarise(n = n_distinct(participant_id))
@@ -25,12 +26,14 @@ occup_final_cleaned <- occup_final |>
     #### Legislators and senior officials ####
     master_profession_original %in% c("") ~ 111,
     ##### Senior government officials ####
-    master_profession_original %in% c("cheffe etat ge (ne souhaite pas preciser quel service)", 
-                                      "che service dip etat de geneve") ~ 1112,
+    master_profession_original %in% c(
+      "cheffe etat ge (ne souhaite pas preciser quel service)", "che service dip etat de geneve", 
+      "administration culturelle", "administratrice culturelle"
+    ) ~ 1112,
     ##### Senior officials of special-interest organisations ####
-    master_profession_original %in% c("directeur- secretaire general") ~ 1114,
+    master_profession_original %in% c("directeur- secretaire general", "administrateur cooperative logement") ~ 1114,
     #### Managing directors and chief executives ####
-    master_profession_original %in% c("ceo") ~ 112,
+    master_profession_original %in% c("ceo", "adjointe au directeur commer ial", "adjoins du directeur") ~ 112,
     ### Administrative and commercial managers ####
     #### Business services and administration managers ####
     master_profession_original %in% c("chief risk officer", "gerant d'investissements") ~ 121,
@@ -39,7 +42,7 @@ occup_final_cleaned <- occup_final |>
     ##### Human Resources managers ####
     master_profession_original %in% c("administratrice ressources humaines", "cheffe de service rh") ~ 1212,
     ##### Business services and administration managers not elsewhere classified ####
-    master_profession_original %in% c("gestionnaire sinistres rc corporelles") ~ 1219,
+    master_profession_original %in% c("gestionnaire sinistres rc corporelles", "airport duty manager") ~ 1219,
     
     #### Sales, marketing and development managers ####
     master_profession_original %in% c("") ~ 122,
@@ -69,7 +72,7 @@ occup_final_cleaned <- occup_final |>
     str_detect(master_profession_original, "cadre bancaire") ~ 1346,
     master_profession_original %in% c("") ~ 1346,
     ##### Professional services managers not elsewhere classified ####
-    master_profession_original %in% c("") ~ 1349,
+    master_profession_original %in% c("lieutenant de securite onu") ~ 1349,
     ### Hospitality, retail and other services managers ####
     #### Hotel and restaurant managers ####
     master_profession_original %in% c("") ~ 141,
@@ -80,7 +83,7 @@ occup_final_cleaned <- occup_final |>
     
     ## **Professionals** ####
     ### Not easy to classify ####
-    master_profession_original %in% c("chercheur doctorant", "adjoint scientifique") ~ 2000,
+    master_profession_original %in% c("chercheur doctorant", "adjoint scientifique", "adjointe scientifique") ~ 2000,
     ### Science and engineering professionals ####
     #### Physical and earth science professionals ####
     master_profession_original %in% c("") ~ 211,
@@ -92,6 +95,7 @@ occup_final_cleaned <- occup_final |>
     master_profession_original %in% c("") ~ 214,
     ##### Civil engineers ####
     master_profession_original %in% c("ingenieur en automatisme du batiment") ~ 2142,
+    master_profession_original %in% c("aeronautique (navigabilite)") ~ 21441,
     #### Electrotechnology engineers ####
     master_profession_original %in% c("") ~ 215,
     #### Architects, planners, surveyors and designers ####
@@ -165,21 +169,35 @@ occup_final_cleaned <- occup_final |>
       "domaine de la sante") ~ 2269,
     
     ### Teaching professionals ####
-    master_profession_original %in% c("") ~ 231,
+    master_profession_original %in% c("alpiniste - conferenciere") ~ 231,
     master_profession_original %in% c("") ~ 232,
-    master_profession_original %in% c("") ~ 233,
+    master_profession_original %in% c("enseignant avec formation universitaire", "enseignante avec formation universitaire",
+                                      "chercheuse et enseignante", "enseignante esii dip", "enseignante generaliste",
+                                      "enseignant avec charge administrative (decanat)") ~ 233,
     master_profession_original %in% c("enseignante benevole") ~ 234,
     master_profession_original %in% c("") ~ 235,
+    master_profession_original %in% c("chargee de formation") ~ 2351,
+    master_profession_original %in% c("enseignant d'allemand (niveau collegial/gymnasial)") ~ 2353,
+    
+    
     
     ### Business and administration professionals ####
     master_profession_original %in% c(
       "administratif financier", "conseil en gestion des risques", "gestionnaire de fortune indepedant",
       "gestionnaire financiere et administrative", "gestionnaire de risques") ~ 241,
-    master_profession_original %in% c("") ~ 242,
+    master_profession_original %in% c("analyste en conformite", "assistante audit") ~ 2411,
+    master_profession_original %in% c("2 jobs - secretaire sociale 50% + independante (consultante en entreprise) 50%") ~ 242,
+    master_profession_original %in% c("analystes, gestion et organisation") ~ 2421,
+
     master_profession_original %in% c("") ~ 243,
     ### Information and communications technology professionals ####
-    master_profession_original %in% c("") ~ 251,
+    master_profession_original %in% c("analyste developpeur") ~ 251,
     master_profession_original %in% c("") ~ 252,
+    master_profession_original %in% c("gestionnaire du systeme d information rh") ~ 2522,
+    master_profession_original %in% c("architecte reseaux informatique", "charge de surete operationnelle reseau") ~ 2523,
+    master_profession_original %in% c("expert it, pole surete securite") ~ 2529,
+    
+    
     ### Legal, social and cultural professionals ####
     #### Legal professionals ####
     master_profession_original %in% c("") ~ 261,
@@ -190,7 +208,7 @@ occup_final_cleaned <- occup_final |>
     ##### Legal professionals not elsewhere classified ####
     master_profession_original %in% c("analyste en criminalite") ~ 2619,
     #### Librarians, archivists and curators ####
-    master_profession_original %in% c("") ~ 262,
+    master_profession_original %in% c("agent de documentation", "assistante bibliothecaire documentaliste archiviste") ~ 262,
     #### Social and religious professionals ####
     ##### Psychologists ####
     master_profession_original %in% c(
@@ -205,17 +223,21 @@ occup_final_cleaned <- occup_final |>
     master_profession_original %in% c("") ~ 263,
     master_profession_original %in% c("auteurs, journalistes et linguistes") ~ 264,
     #### Creative and performing artists ####
-    master_profession_original %in% c("metteur en scene et therapeute") ~ 265,
+    master_profession_original %in% c("metteur en scene et therapeute", "artiste designer") ~ 265,
+    master_profession_original %in% c("artiste et enseignant remplacant d'art plastique") ~ 2651,
+    
     
     ## **Technicians and associate professionals** ####
     
     ### Science and engineering associate professionals ####
     master_profession_original %in% c("") ~ 311,
     master_profession_original %in% c("") ~ 312,
+    master_profession_original %in% c("adjoint resp. carrosserie") ~ 3122,
     master_profession_original %in% c("") ~ 313,
     master_profession_original %in% c("") ~ 314,
     master_profession_original %in% c("") ~ 315,
-    master_profession_original %in% c("aircraft coordinator") ~ 31540,
+    master_profession_original %in% c("aircraft coordinator", "agent autorite aviation", "agent d'assistance aeroportuaire",
+                                      "aircraft coordinateur") ~ 3154,
     ### Health Associate professionals ####
     #### Medical and pharmaceutical technicians ####
     master_profession_original %in% c("") ~ 321,
@@ -251,8 +273,11 @@ occup_final_cleaned <- occup_final |>
       "sante travail", "specialiste de sante au travail", "assistante dentaire",
       "assistants en medecine dentaire", "hygieniste dentaire", "hygienistes dentaires",
       "hygieniste dentaire (desolee, je ne sais pas dans quelle categorie je dois le classer)",
-      "opticien", "assistance maternel"
+      "opticien", "assistance maternel", "agent de sterilisation"
     ) ~ 325,
+    master_profession_original %in% c("gestionnaire administrative surete",
+                                      "responsable assurance qualite hygiene etsecurite") ~ 3257,
+    
     #####  Ambulance workers ####
     master_profession_original %in% c(
       "ambulancier", "ambulancier dipl. es", "ambulancier diplome es",
@@ -264,32 +289,40 @@ occup_final_cleaned <- occup_final |>
     
     ### Business and administration associate professionals ####
     master_profession_original %in% c("") ~ 331,
-    master_profession_original %in% c("account director", "acheteuse assitante commerciale") ~ 332,
+    master_profession_original %in% c("account director", "acheteuse assitante commerciale", "acc. manager") ~ 332,
+    master_profession_original %in% c("approvisionneur , acheteur") ~ 3323,
+    
     master_profession_original %in% c("") ~ 333,
-    master_profession_original %in% c("coordinatrice de secteur") ~ 334,
+    master_profession_original %in% c("agents d'emploi et de recrutement de main-d'oeuvre") ~ 3333,
+    master_profession_original %in% c("coordinatrice de secteur", "administration, bureau de conference") ~ 334,
+    master_profession_original %in% c("assistante de direction - chargee des evenements et de la communication") ~ 3343,
+    
     #### Regulatory government associate professionals ####
     master_profession_original %in% c("responsable surete surveillance") ~ 335,
+    master_profession_original %in% c("ajointe au service social et communautaire d'une commune") ~ 3353,
+    master_profession_original %in% c("agent de surete specialiste", "chef d'equipe surete", "officier de securite", 
+                                      "responsable surete") ~ 3355,
     ### Legal, social, cultural and related associate professionals ####
     
     #### Legal, social and religious associate professionals ####
-    master_profession_original %in% c("intervenante psychosociale") ~ 341,
+    master_profession_original %in% c("intervenante psychosociale", "animateur d'atelier") ~ 341,
     ##### Social work associate professionals ####
-    master_profession_original %in% c("educatrice") ~ 3412,
+    master_profession_original %in% c("educatrice", "collaborateur social / securite a domicile") ~ 3412,
     ##### Religious associate professionals ####
-    str_detect(master_profession_original, "pastorale") ~ 34130,
+    str_detect(master_profession_original, "pastoral") ~ 34130,
     #### Sports and fitness workers ####
-    master_profession_original %in% c("") ~ 342,
-    master_profession_original %in% c("enseignant d'education physique") ~ 3422,
+    master_profession_original %in% c("adjoint a la responsable des installetions sportives") ~ 342,
+    master_profession_original %in% c("enseignant d'education physique", "enseignante en education physique") ~ 3422,
     #### Artistic, cultural and culinary associate professionals ####
     master_profession_original %in% c("accueil musee") ~ 343,
     #### Information and communications technicians ####
-    master_profession_original %in% c("") ~ 351,
+    master_profession_original %in% c("activites de support (it, transports, achat, immobilier)") ~ 351,
     master_profession_original %in% c("") ~ 352,
     
     ## **Clerical support workers** ####
     ### General and keyboard clerks ####
     #### General office clerks ####
-    master_profession_original %in% c("autres employes de type administratif") ~ 411,
+    master_profession_original %in% c("autres employes de type administratif", "apprenti employe de commerce") ~ 411,
     #### Secretaries (general) ####
     master_profession_original %in% c("") ~ 412,
     #### Keyboard operators ####
@@ -298,15 +331,17 @@ occup_final_cleaned <- occup_final |>
     master_profession_original %in% c("") ~ 421,
     master_profession_original %in% c("") ~ 422,
     ### Numerical and material recording clerks ####
-    master_profession_original %in% c("") ~ 431,
-    master_profession_original %in% c("disposante", "coordinateur logistique") ~ 432,
+    master_profession_original %in% c("aide comptable et administrative", "aide-comptable dans un structure de petit-enfance etatique") ~ 431,
+    master_profession_original %in% c("disposante", "coordinateur logistique", "agent operations") ~ 432,
+    master_profession_original %in% c("agent administratif - unite logistique") ~ 4323,
     ### Other clerical support workers ####
     master_profession_original %in% c("achats") ~ 441,
     str_detect(master_profession_original, "adjointe administrative - support rh") ~ 4416,
     ## **Service and sales workers** ####
     ### Personal service workers ####
     master_profession_original %in% c("") ~ 511,
-    str_detect(master_profession_original, "agent d'escale|agente d'escale") ~ 5111,
+    str_detect(master_profession_original, "agent d'escale|agente d'escale|agent escale fret") ~ 5111,
+    master_profession_original %in% c("assistance au pmr a l'aeroport") ~ 5111,
     master_profession_original %in% c("") ~ 512,
     master_profession_original %in% c("") ~ 513,
     master_profession_original %in% c("") ~ 514,
@@ -314,27 +349,37 @@ occup_final_cleaned <- occup_final |>
     master_profession_original %in% c("") ~ 515,
     #### Other personal services workers ####
     # master_profession_original %in% c("astro-psychologue") ~ 516,
+    master_profession_original %in% c("aide formateur conducteur") ~ 5165,
     ### Sales workers ####
     master_profession_original %in% c("") ~ 521,
     # master_profession_original %in% c("droguiste") ~ 522,
-    master_profession_original %in% c("") ~ 523,
+    master_profession_original %in% c("agent de billetterie") ~ 523,
     master_profession_original %in% c("") ~ 524,
     ### Personal Care workers ####
     ##### Child care workers and teachers' aides ####
     (str_detect(master_profession_original, "accueil") & str_detect(master_profession_original, "familial")) |
       master_profession_original %in% c("acceuillante familiale a la journee") ~ 5311,
+    master_profession_original %in% c("aides-enseignants") ~ 5312,
     ##### Personal care workers in health services ####
-    # (str_detect(master_profession_original, "aid") & str_detect(master_profession_original, "soign")) | 
-    #   master_profession_original %in% c("auxiliaire de sante", "auxiliaire de sante dans un ems") ~ 532,
-    master_profession_original %in% c("a$e", "accompagnante, aide a domicile", "accompagnant") ~ 5322,
+    master_profession_original %in% c("ase / planificateur / enseignant de sport") ~ 532,
+    master_profession_original %in% c("a l'hospice", "aide soignante en ems") ~ 5321, 
+    master_profession_original %in% c(
+      "a$e", "accompagnante, aide a domicile", "accompagnant", "aide socio-educative"
+    ) ~ 5322,
+    master_profession_original %in% c("assistante animatrice") ~ 5329,
+    
     ### Protective services workers ####
     master_profession_original %in% c("") ~ 541,
+    master_profession_original %in% c("appointee de gendarmerie") ~ 5412,
+    master_profession_original %in% c("assistante chargee de securite", "securite", "securite accueil",
+                                      "sergent securite onug", "coordonnateur securite") ~ 5414,
+    
     
     ## **Skilled agricultural, forestry and fishery workers** ####
     ### Market-oriented skilled agricultural workers ####
-    master_profession_original %in% c("") ~ 611,
+    master_profession_original %in% c("agri ulteur viticulteur") ~ 611,
     master_profession_original %in% c("") ~ 612,
-    master_profession_original %in% c("") ~ 613,
+    master_profession_original %in% c("agriculteurs et ouvriers qualifies, cultures maraicheres") ~ 613,
     ### Market-oriented skilled forestry, fishery and hunting workers ####
     master_profession_original %in% c("") ~ 621,
     master_profession_original %in% c("") ~ 622,
@@ -357,6 +402,8 @@ occup_final_cleaned <- occup_final |>
     master_profession_original %in% c("") ~ 723,
     ### Handicraft and printing workers ####
     master_profession_original %in% c("") ~ 731,
+    master_profession_original %in% c("artiste ceramique") ~ 7314,
+    
     master_profession_original %in% c("") ~ 732,
     ### Electrical and electronic trades workers ####
     master_profession_original %in% c("employe sig") ~ 741,
@@ -389,16 +436,16 @@ occup_final_cleaned <- occup_final |>
     ## **Elementary occupations** ####
     
     ### Cleaners and helpers ####
-    master_profession_original %in% c("") ~ 911,
+    master_profession_original %in% c("agent de nettoyage") ~ 911,
     master_profession_original %in% c("") ~ 912,
     ### Agricultural, forestry and fishery labourers ####
-    master_profession_original %in% c("") ~ 921,
+    master_profession_original %in% c("apprentissage fleuriste") ~ 9214,
     ### Labourers in mining, construction, manufacturing and transport ####
     master_profession_original %in% c("") ~ 931,
     master_profession_original %in% c("") ~ 932,
     master_profession_original %in% c("") ~ 933,
     ### Food preparation assistants ####
-    master_profession_original %in% c("") ~ 941,
+    master_profession_original %in% c("apprentissage cuisinier") ~ 941,
     ### Street and related sales and service workers ####
     master_profession_original %in% c("") ~ 951,
     master_profession_original %in% c("") ~ 952,
@@ -413,22 +460,30 @@ occup_final_cleaned <- occup_final |>
     
     ## **Not possible to define** ####
     master_profession_original %in% c(
-      "actuellement mere au foyer - avant banquiere", "au foyer",
-      "aucun", "aucune"
+      "actuellement mere au foyer - avant banquiere", "au foyer", "actuellement mere au foyer, avant cadre financier",
+      "aucun", "aucune", "en activite", "pas d'activite non salariee","elle a 5 ans - pas pertinent!",
+      "en formation", "en formation (enseignement)"
     ) ~ -999,
     
     
     .default = NA
   )) |>
-  mutate(confidence = case_when(!is.na(ISCO_new) ~ "High", .default = confidence),
-         ISCO = case_when(is.na(ISCO_new) ~ ISCO, .default = as.integer(str_sub(ISCO_new, start = 1, end = 4)))) |> 
+  mutate(
+    manually_classified = case_when(!is.na(ISCO_new) ~ TRUE, .default = FALSE),
+    confidence = case_when(manually_classified ~ "High", .default = confidence),
+    ISCO = case_when(is.na(ISCO_new) ~ ISCO, .default = as.integer(str_sub(ISCO_new, start = 1, end = 4)))
+  ) |> 
   select(-Occupation_label) |> 
   left_join(occ_labels) |>                       # Merge with ISCO occupations file
   relocate(Occupation_label, .after = Name_fr) |> 
   # update the remaining_bad_matches object for reference
   arrange(master_profession_original) ; remaining_bad_matches <- inner_join(
-  remaining_bad_matches, occup_final_cleaned |> 
-    filter(is.na(ISCO)) |> 
-    select(participant_id), by = "participant_id") |> 
+    remaining_bad_matches, occup_final_cleaned |> 
+      filter(is.na(ISCO)) |> 
+      select(participant_id), by = "participant_id") |> 
   arrange(master_profession_original, participant_id) ; occup_final_cleaned |> filter(!is.na(ISCO)) |> distinct() |> 
   summarise(n = n_distinct(participant_id))
+
+
+# Helper file for classifications ####
+a <- remaining_bad_matches |> filter(str_detect(master_profession_original, "formation|enseignant"))
