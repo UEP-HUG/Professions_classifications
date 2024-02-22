@@ -1,8 +1,8 @@
 pacman::p_load(here, tidyverse)
 
 # Read in files ####
-if (file.exists(here("output", "fuzzy_classified_occupations_to_clean_2024-02-21.rds"))) {
-  occup_final <- readRDS(here("output", "fuzzy_classified_occupations_to_clean_2024-02-21.rds"))
+if (file.exists(here("output", "fuzzy_classified_occupations_to_clean_2024-02-22.rds"))) {
+  occup_final <- readRDS(here("output", "fuzzy_classified_occupations_to_clean_2024-02-22.rds"))
   remaining_bad_matches <- readRDS(here("output", "remaining_bad_matches.rds"))
 } else {
   source(here("code", "04a_make_fuzzy_classifications.R"))
@@ -52,7 +52,8 @@ occup_final_cleaned <- occup_final |>
     master_profession_original %in% c("directeur risk management et it dans societe financiere") ~ 133,
     #### Professional services managers ####
     ##### Child care services managers ####
-    master_profession_original %in% c("directrice de secteur petite enfance", "responsable de secteur parascolaire") ~ 1341,
+    master_profession_original %in% c(
+      "directrice de secteur petite enfance", "responsable de secteur parascolaire") ~ 1341,
     ##### Health services managers ####
     master_profession_original %in% c(
       "cadre de sante", "cadre superieur de sante", "cadres de direction, services de sante",
@@ -149,8 +150,9 @@ occup_final_cleaned <- occup_final |>
       "physiotherapeute cardio-respiratoire", "physiotherapeutes", "phisiotherapeute",
       "physiotherapeute independant, chef d'un cabinet avec 1 employee") ~ 2264,
     ##### Dieticians and nutritionists ####
-    master_profession_original %in% c("dieteticien", "dieteticienne", "dieteticiens et specialistes de la nutrition",
-                                      "therapeute nutritionniste") ~ 2265,
+    master_profession_original %in% c(
+      "dieteticien", "dieteticienne", "dieteticiens et specialistes de la nutrition",
+      "therapeute nutritionniste") ~ 2265,
     ##### Audiologists and speech therapists ####
     master_profession_original %in% c("logopediste") ~ 2266,
     ##### Optometrists and ophthalmic opticians ####
@@ -412,8 +414,8 @@ occup_final_cleaned <- occup_final |>
     ## **Not possible to define** ####
     master_profession_original %in% c(
       "actuellement mere au foyer - avant banquiere", "au foyer",
-      "aucun", "aucune",
-                                      ) ~ -999,
+      "aucun", "aucune"
+    ) ~ -999,
     
     
     .default = NA
@@ -425,8 +427,8 @@ occup_final_cleaned <- occup_final |>
   relocate(Occupation_label, .after = Name_fr) |> 
   # update the remaining_bad_matches object for reference
   arrange(master_profession_original) ; remaining_bad_matches <- inner_join(
-    remaining_bad_matches, occup_final_cleaned |> 
-      filter(is.na(ISCO)) |> 
-      select(participant_id), by = "participant_id") |> 
+  remaining_bad_matches, occup_final_cleaned |> 
+    filter(is.na(ISCO)) |> 
+    select(participant_id), by = "participant_id") |> 
   arrange(master_profession_original, participant_id) ; occup_final_cleaned |> filter(!is.na(ISCO)) |> distinct() |> 
   summarise(n = n_distinct(participant_id))
