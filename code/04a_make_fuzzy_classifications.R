@@ -37,22 +37,20 @@ stopwords_fr <- tibble(word = stopwords("fr")) |>
 
 # French professions
 professions_fr <- fread(here("data", "HCL_CH_ISCO_19_PROF_1_2_level_6.csv")) |> 
-  filter(str_length(Parent)>4)
+  filter(str_length(Parent)>4) # remove military lines
 # English professions
 professions_en <- fread(here("data", "HCL_CH_ISCO_19_PROF_1_2_level_6_en.csv")) |> 
   rename(Name_fr = Name_en) |> 
-  filter(str_length(Parent)>4)
-
+  filter(str_length(Parent)>4) # remove military lines
+# Higher level labels - these were used for Sante-Travail 2023
 professions_fr_5 <- fread(here("data", "HCL_CH_ISCO_19_PROF_1_2_level_5.csv")) |> 
   arrange(Parent) |> 
   filter(
-    str_length(Parent)>3,
+    str_length(Parent)>3, # remove military lines
     # remove codes ending in 00 or 000
     !str_ends(Parent, pattern = "00|000")
   ) |> 
-  mutate(Name_fr = str_remove(Name_fr, "\\bsip\\b"))
-
-# professions_fr_3 <- fread(here("data", "HCL_CH_ISCO_19_PROF_1_2_levels_3-6.csv"))
+  mutate(Name_fr = str_remove(Name_fr, "\\bsip\\b")) # remove "sip" from the labels
 
 ## Transform strings and codes for fuzzy matching ####
 professions <- rbind(professions_fr, professions_en, professions_fr_5) |>
