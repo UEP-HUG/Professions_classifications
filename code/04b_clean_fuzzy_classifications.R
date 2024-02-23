@@ -38,7 +38,8 @@ occup_final_cleaned <- occup_final |>
     #### Business services and administration managers ####
     master_profession_original %in% c("chief risk officer", "gerant d'investissements") ~ 121,
     ##### Finance managers ####
-    master_profession_original %in% c("chef de service service financier", "cfo") ~ 1211,
+    master_profession_original %in% c("chef de service service financier", "cfo", "finance manager",
+                                      "gestionnaire des risques financiers") ~ 1211,
     ##### Human Resources managers ####
     master_profession_original %in% c("administratrice ressources humaines", "cheffe de service rh") ~ 1212,
     ##### Business services and administration managers not elsewhere classified ####
@@ -169,23 +170,26 @@ occup_final_cleaned <- occup_final |>
       "domaine de la sante") ~ 2269,
     
     ### Teaching professionals ####
-    master_profession_original %in% c("alpiniste - conferenciere") ~ 231,
+    master_profession_original %in% c("alpiniste - conferenciere", "auxiliaire de recherche et d'enseignement") ~ 231,
     master_profession_original %in% c("") ~ 232,
     master_profession_original %in% c("enseignant avec formation universitaire", "enseignante avec formation universitaire",
                                       "chercheuse et enseignante", "enseignante esii dip", "enseignante generaliste",
                                       "enseignant avec charge administrative (decanat)") ~ 233,
-    master_profession_original %in% c("enseignante benevole") ~ 234,
+    master_profession_original %in% c("enseignante benevole", "etudiante, mais j'enseigne a l'ecole primaire tous les jeudis et vendredis pour mes stages.") ~ 234,
     master_profession_original %in% c("") ~ 235,
     master_profession_original %in% c("chargee de formation") ~ 2351,
     master_profession_original %in% c("enseignant d'allemand (niveau collegial/gymnasial)") ~ 2353,
-    
+    master_profession_original %in% c("comedienne et professeure au conservatoire de geneve") ~ 2354,
+    master_profession_original %in% c("comedienne et professeur de danse", "enseigne la ceramique", 
+                                      "enseignement de la poterie (travail manuel avec cfc)") ~ 2355,
     
     
     ### Business and administration professionals ####
     master_profession_original %in% c(
       "administratif financier", "conseil en gestion des risques", "gestionnaire de fortune indepedant",
-      "gestionnaire financiere et administrative", "gestionnaire de risques") ~ 241,
+      "gestionnaire financiere et administrative", "gestionnaire de risques", "gestionnaire financiere administrative") ~ 241,
     master_profession_original %in% c("analyste en conformite", "assistante audit") ~ 2411,
+    master_profession_original %in% c("independant - financial management services") ~ 2412,
     master_profession_original %in% c("2 jobs - secretaire sociale 50% + independante (consultante en entreprise) 50%") ~ 242,
     master_profession_original %in% c("analystes, gestion et organisation") ~ 2421,
 
@@ -200,15 +204,16 @@ occup_final_cleaned <- occup_final |>
     
     ### Legal, social and cultural professionals ####
     #### Legal professionals ####
-    master_profession_original %in% c("") ~ 261,
+    master_profession_original %in% c("juriste et agent commercial") ~ 261,
     ##### Lawyers ####
-    master_profession_original %in% c("") ~ 2611,
+    master_profession_original %in% c("fonctionnaire (avocat travaillant pour une organisation internationale)") ~ 2611,
     ##### Judges ####
     master_profession_original %in% c("juge a la cour") ~ 2612,
     ##### Legal professionals not elsewhere classified ####
     master_profession_original %in% c("analyste en criminalite") ~ 2619,
     #### Librarians, archivists and curators ####
-    master_profession_original %in% c("agent de documentation", "assistante bibliothecaire documentaliste archiviste") ~ 262,
+    master_profession_original %in% c("agent de documentation", "assistante bibliothecaire documentaliste archiviste", 
+                                      "juriste-documentaliste (& enseignant a 30%)") ~ 262,
     #### Social and religious professionals ####
     ##### Psychologists ####
     master_profession_original %in% c(
@@ -222,6 +227,7 @@ occup_final_cleaned <- occup_final |>
     ##### Rest ####
     master_profession_original %in% c("") ~ 263,
     master_profession_original %in% c("auteurs, journalistes et linguistes") ~ 264,
+    master_profession_original %in% c("monteuse tv et enseignante de fle benevole") ~ 2642,
     #### Creative and performing artists ####
     master_profession_original %in% c("metteur en scene et therapeute", "artiste designer") ~ 265,
     master_profession_original %in% c("artiste et enseignant remplacant d'art plastique") ~ 2651,
@@ -289,6 +295,8 @@ occup_final_cleaned <- occup_final |>
     
     ### Business and administration associate professionals ####
     master_profession_original %in% c("") ~ 331,
+    master_profession_original %in% c("assistante trading achat vente", "commodity trading", "senior salestrader",
+                                      "trading") ~ 3311,
     master_profession_original %in% c("account director", "acheteuse assitante commerciale", "acc. manager") ~ 332,
     master_profession_original %in% c("approvisionneur , acheteur") ~ 3323,
     
@@ -306,6 +314,7 @@ occup_final_cleaned <- occup_final |>
     
     #### Legal, social and religious associate professionals ####
     master_profession_original %in% c("intervenante psychosociale", "animateur d'atelier") ~ 341,
+    master_profession_original %in% c("avocat, assistant unige") ~ 3411,
     ##### Social work associate professionals ####
     master_profession_original %in% c("educatrice", "collaborateur social / securite a domicile") ~ 3412,
     ##### Religious associate professionals ####
@@ -324,7 +333,7 @@ occup_final_cleaned <- occup_final |>
     #### General office clerks ####
     master_profession_original %in% c("autres employes de type administratif", "apprenti employe de commerce") ~ 411,
     #### Secretaries (general) ####
-    master_profession_original %in% c("") ~ 412,
+    master_profession_original %in% c("secretaire/enseignante") ~ 412,
     #### Keyboard operators ####
     master_profession_original %in% c("") ~ 413,
     ### Customer services clerks ####
@@ -332,6 +341,7 @@ occup_final_cleaned <- occup_final |>
     master_profession_original %in% c("") ~ 422,
     ### Numerical and material recording clerks ####
     master_profession_original %in% c("aide comptable et administrative", "aide-comptable dans un structure de petit-enfance etatique") ~ 431,
+    master_profession_original %in% c("assistante fiscale", "fiscaliste", "fiscaliste au sein d'une entreprise multi-nationale") ~ 4311,
     master_profession_original %in% c("disposante", "coordinateur logistique", "agent operations") ~ 432,
     master_profession_original %in% c("agent administratif - unite logistique") ~ 4323,
     ### Other clerical support workers ####
@@ -463,7 +473,8 @@ occup_final_cleaned <- occup_final |>
       "actuellement mere au foyer - avant banquiere", "au foyer", "actuellement mere au foyer, avant cadre financier",
       "aucun", "aucune", "en activite", "pas d'activite non salariee","elle a 5 ans - pas pertinent!",
       "en formation", "en formation (enseignement)"
-    ) ~ -999,
+    ) |
+      str_detect(master_profession_original, "etudiante a l'universite") ~ -999,
     
     
     .default = NA
@@ -487,3 +498,4 @@ occup_final_cleaned <- occup_final |>
 
 # Helper file for classifications ####
 a <- remaining_bad_matches |> filter(str_detect(master_profession_original, "formation|enseignant"))
+a <- remaining_bad_matches |> filter(str_detect(master_profession_original, "avocat|jurist|legal"))
