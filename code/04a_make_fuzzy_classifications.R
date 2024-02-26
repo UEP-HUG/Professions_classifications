@@ -7,8 +7,13 @@ pacman::p_load(
   # stringdist, # This is that package used by the fuzzyjoin package
   stopwords, # package with list of stopwords
   tidytext,
+  cld2,   # package to detect the language of text (bayesian based model)
+  cld3,   # package to detect the language of text (neural network model)
+  fastText,
   stringi
 )
+
+pacman::p_load_current_gh("trinker/lemmar") #  install the development version of lemmatization package
 
 # Read in dat_master_professions_2.rds
 if (file.exists(here("output", "dat_master_professions_2.rds"))) {
@@ -37,11 +42,21 @@ stopwords_fr <- tibble(word = stopwords("fr")) |>
 
 # French professions
 professions_fr <- fread(here("data", "HCL_CH_ISCO_19_PROF_1_2_level_6.csv")) |> 
-  filter(str_length(Parent)>4) # remove military lines
+  filter(str_length(Parent)>4) |> # remove military lines
+  # label the language (french or english)
+  mutate(
+    lang_Name_cld2 = cld2::detect_language(Name_fr),
+    lang_Name_cld3 = cld3::detect_language(Name_fr),
+    language.Name = case_when(lang_Name_cld2 == "en" & lang_Name_cld3 == "en" ~ "en", .default = "fr")
+  ) |>
+  select(-lang_Name_cld2, -lang_Name_cld3)
+
 # English professions
 professions_en <- fread(here("data", "HCL_CH_ISCO_19_PROF_1_2_level_6_en.csv")) |> 
   rename(Name_fr = Name_en) |> 
+  mutate(language.Name = "en") |> 
   filter(str_length(Parent)>4) # remove military lines
+
 # Higher level labels - these were used for Sante-Travail 2023
 professions_fr_5 <- fread(here("data", "HCL_CH_ISCO_19_PROF_1_2_level_5.csv")) |> 
   arrange(Parent) |> 
@@ -50,7 +65,14 @@ professions_fr_5 <- fread(here("data", "HCL_CH_ISCO_19_PROF_1_2_level_5.csv")) |
     # remove codes ending in 00 or 000
     !str_ends(Parent, pattern = "00|000")
   ) |> 
-  mutate(Name_fr = str_remove(Name_fr, "\\bsip\\b")) # remove "sip" from the labels
+  mutate(
+    Name_fr = str_remove(Name_fr, "\\bsip\\b"),
+    # Label the language
+    lang_Name_cld2 = cld2::detect_language(Name_fr),
+    lang_Name_cld3 = cld3::detect_language(Name_fr),
+    language.Name = case_when(lang_Name_cld2 == "en" & lang_Name_cld3 == "en" ~ "en", .default = "fr")
+  ) |> # remove "sip" from the labels
+  select(-lang_Name_cld2, -lang_Name_cld3)
 
 ## Transform strings and codes for fuzzy matching ####
 professions <- rbind(professions_fr, professions_en, professions_fr_5) |>
@@ -87,16 +109,19 @@ professions <- rbind(professions_fr, professions_en, professions_fr_5) |>
 # Remove common "stopwords"
 prof_stop <- professions |> 
   mutate(Name_fr = str_replace(Name_fr, "l'|d'", "")) |> 
-  unnest_tokens(word, Name_fr) |> 
+  unnest_tokens(word, Name_fr) |>
   anti_join(stopwords_fr) |> 
+  mutate(Name_fr_lem = case_when(language.Name =="en" ~ lemmatize_words_fr(word),
+                                 .default = lemmatize_words_fr(word))) |>
   group_by(rowid) |> 
-  mutate(Name_fr_2 = paste(word, collapse = " ")) |> 
+  mutate(Name_fr_2 = paste(word, collapse = " "),
+         Name_fr_2_lem = paste(Name_fr_lem, collapse = " ")) |> 
   ungroup() |> 
-  select(-word) |> 
+  select(-word, -Name_fr_lem) |> 
   distinct()
 
 # Merge back in with the professions object
-professions <- left_join(professions, prof_stop)
+professions <- left_join(professions, prof_stop) |> select(-language.Name)
 
 rm(prof_stop, professions_fr, professions_en, professions_fr_5) # remove intermediate objects
 
@@ -112,14 +137,18 @@ occup <- dat_master_professions_2 %>%
          participant_id, codbar, date_inclusion:beyond_inclusion, Hug_Date_Derniere_Soumission_C.WORK) %>%
   # Make some changes to the free-text columns to make them easier to work with
   # (Convert accent characters, e.g. "é" to "e", convert all capital letters to small letters)
-  mutate(master_profession = stringi::stri_trans_general(str = master_profession, 
-                                                         id = "Latin-ASCII"), # Convert accent characters, e.g. "é" to "e"
-         master_profession = str_squish(str_to_lower(master_profession)),             # Convert all capital letters to small letters
-         
-         job_sector_other.st_22 = stringi::stri_trans_general(str = job_sector_other.st_22, 
-                                                              id = "Latin-ASCII"),
-         job_sector_other.st_22 = str_squish(str_to_lower(job_sector_other.st_22)),
-         ISCO = NA                                                               # Empty column that we'll fill in the next steps
+  mutate(
+    lang_Name_cld2 = cld2::detect_language(master_profession),
+    lang_Name_cld3 = cld3::detect_language(master_profession),
+    language.occup = case_when(lang_Name_cld2 == "en" & lang_Name_cld3 == "en" ~ "en", .default = "fr"),
+    master_profession = stringi::stri_trans_general(str = master_profession, 
+                                                    id = "Latin-ASCII"), # Convert accent characters, e.g. "é" to "e"
+    master_profession = str_squish(str_to_lower(master_profession)),             # Convert all capital letters to small letters
+    
+    job_sector_other.st_22 = stringi::stri_trans_general(str = job_sector_other.st_22, 
+                                                         id = "Latin-ASCII"),
+    job_sector_other.st_22 = str_squish(str_to_lower(job_sector_other.st_22)),
+    ISCO = NA                                                               # Empty column that we'll fill in the next steps
   ) %>%
   mutate(
     #
@@ -155,15 +184,18 @@ occup <- dat_master_professions_2 %>%
   ) |> 
   add_count(master_profession, sort = TRUE) %>% 
   arrange(master_profession, desc(n)) |>
-  # sample_n(1000) |> # Take a random sample of n rows (when trying things out, to save time)
-  select(participant_id, master_profession_original, master_profession, profession_source) |> 
+  # sample_n(100) |> # Take a random sample of n rows (when trying things out, to save time)
+  select(participant_id, master_profession_original, master_profession, profession_source, language.occup) |> 
   # Remove stopwords (trial)
   unnest_tokens(word, master_profession) |> 
   anti_join(stopwords_fr) |> 
+  mutate(master_profession_lem = case_when(language.occup == "en" ~ lemmatize_words_en(word), 
+                                           .default = lemmatize_words_fr(word))) |>
   group_by(participant_id) |>
-  mutate(master_profession = paste(word, collapse = " ")) |>
+  mutate(master_profession = paste(word, collapse = " "),
+         master_profession_lem = paste(master_profession_lem, collapse = " ")) |>
   ungroup() |>
-  select(-word) |> 
+  select(-word, -language.occup) |> 
   #keep only distinct rows
   distinct() #|> 
 # pivot_longer(cols = !participant_id, values_to = "profession", names_to = "source") |> 
@@ -215,13 +247,13 @@ matches_jaccard_prep <- bad_matches_jw |>
   select(-rowid, -NA_or_high_distance, - group_top_match) |>  # change dist to dist_jw
   rename(Name_fr_jw = Name_fr, Name_fr_2_jw = Name_fr_2, ISCO_jw = ISCO) |> 
   filter(id_index == 1) |> 
-  select(-Name_fr_jw, -id_index, -dist_jaccard)
+  select(-Name_fr_jw, -Name_fr_2_lem, -id_index, -dist_jaccard)
 
 ## Run the Jaccard matching ####
 start <- Sys.time() ; print(paste(start, " --> Processing full dataset takes about 25 mins")); matches_jaccard <- fuzzyjoin::stringdist_left_join(
   x = matches_jaccard_prep,
   y = professions,
-  by = c(master_profession = "Name_fr_2"), # Match against the stopwords removed versions
+  by = c(master_profession_lem = "Name_fr_2_lem"), # Match against the stopwords removed versions
   method = "jaccard", q = 3, # q = the size of the q-grams
   distance_col = "dist_jaccard",
   max_dist = 0.7 # Set a cutoff for the matches
