@@ -19,7 +19,7 @@ inclusion_filtered <- readRDS("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Ba
   # Remove the V5_inclusion people, as these are bus_santé people and there are some duplicates
   filter(Origin != "V5_inclusion") |>
   # Filter for only participants in one of the relevant studies
-  filter(serocov_pop | pop_pilote | serocov_schools | serocov_kids | serocov_work | sp2_novdec_2020 | sp3_juin_2021 | sp4_avril_2022) |>
+  # filter(serocov_pop | pop_pilote | serocov_schools | serocov_kids | serocov_work | sp2_novdec_2020 | sp3_juin_2021 | sp4_avril_2022) |>
   filter(!testeur) |>  # remove data produced by testers - I think Nick already did this
   filter(!str_starts(codbar, "T"))  |>  # Remove any people with codbar beginning with T (also testers)
   select(participant_id)
@@ -27,10 +27,12 @@ inclusion_filtered <- readRDS("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Ba
 ## Read in ISCO labels ####
 occ_labels <- readxl::read_xlsx(here("data", "do-e-00-isco08-01.xlsx"), # read in occupation titles based on ISCO code
                                 sheet = "ISCO-08 English version") %>% drop_na() %>% mutate(ISCO = as.numeric(ISCO)) %>% 
-  filter(!str_detect(Occupation_label, "armed forces|Armed forces")) # Remove armed services as their numbers cause weirdness and we don't have them in our dataset
+  filter(!str_detect(Occupation_label, "armed forces|Armed forces")) |> # Remove armed services as their numbers cause weirdness and we don't have them in our dataset
+  mutate(Occupation_label = str_remove(Occupation_label, "\\b, nos\\b"))
 
 # Count the number of participants that are categorized
-occup_final |> filter(!is.na(ISCO)) |> distinct() |> summarise(n = n_distinct(participant_id))
+n_tot = occup_final |> summarise(n = n_distinct(participant_id, source))
+occup_final |> filter(!is.na(ISCO)) |> distinct() |> summarise(n = n_distinct(participant_id, source))
 
 
 # Manually assign ISCO codes ####
@@ -275,7 +277,7 @@ occup_final_cleaned <- occup_final |>
       "gestionnaire financiere et administrative", "gestionnaire de risques", "gestionnaire financiere administrative",
       "responsable des risques et de la conformite", "responsable risques", "bancaire") ~ 241,
     master_profession_original %in% c("analyste en conformite", "assistante audit", "compliance manager", "chef de l'audit interne",
-                                      "auditrice interne") ~ 2411,
+                                      "auditrice interne", "auditeur interne") ~ 2411,
     master_profession_original %in% c("independant - financial management services") ~ 2412,
     master_profession_original %in% c("2 jobs - secretaire sociale 50% + independante (consultante en entreprise) 50%",
                                       "yield director") ~ 242,
@@ -419,7 +421,7 @@ occup_final_cleaned <- occup_final |>
                                       "comptable - rh", "comptable collocatrice") ~ 3313,
     master_profession_original %in% c("account director", "acheteuse assitante commerciale", "acc. manager", "independant courtier") ~ 332,
     master_profession_original %in% c("independant agent d'assurance") ~ 3321,
-    master_profession_original %in% c("approvisionneur , acheteur", "acgeteuse") ~ 3323,
+    master_profession_original %in% c("approvisionneur , acheteur", "acgeteuse", "achats") ~ 3323,
     
     master_profession_original %in% c("courtier maritime", "courtier d'affrete maritime") ~ 333,
     master_profession_original %in% c("gestionnaire de congres medicales", "responsable evenementiel", "evenementiel") ~ 3332,
@@ -492,7 +494,7 @@ occup_final_cleaned <- occup_final |>
     master_profession_original %in% c("") ~ 421,
     master_profession_original %in% c("") ~ 422,
     master_profession_original %in% c("job d'etudiante, receptionniste pour un apparthotel") ~ 4224,
-    master_profession_original %in% c("chargee d accueil", "responsable accueil reception") ~ 4226,
+    master_profession_original %in% c("chargee d accueil", "responsable accueil reception", "accueil") ~ 4226,
     ### Numerical and material recording clerks ####
     master_profession_original %in% c("aide comptable et administrative", "aide-comptable dans un structure de petit-enfance etatique") ~ 431,
     master_profession_original %in% c("assistante fiscale", "fiscaliste", "fiscaliste au sein d'une entreprise multi-nationale") ~ 4311,
@@ -502,7 +504,7 @@ occup_final_cleaned <- occup_final |>
                                       "gestionnaire de stock bloc operatoire") ~ 4321,
     master_profession_original %in% c("agent administratif - unite logistique") ~ 4323,
     ### Other clerical support workers ####
-    master_profession_original %in% c("achats", "gestionnaire administrative des residants") ~ 441,
+    master_profession_original %in% c("gestionnaire administrative des residants") ~ 441,
     str_detect(master_profession_original, "adjointe administrative - support rh") ~ 4416,
     master_profession_original %in% c("job d'etudiant dans l'administratif", "conseiller de ventes superviseur") ~ 4419,
     ## **Service and sales workers** ####
@@ -670,13 +672,25 @@ occup_final_cleaned <- occup_final |>
       "independante et profession de formation intermediaire", "independante, profession non-manuelle, formation superieure",
       "recherche d'emploi, derniere profession independantes", "migros jusqu a 4 septembre puis recherche d emploi",
       "dernier emploi, chaperon rouge croix rouge genevoise", "en emploi", "je travaille a 100 % dans un seul emploi",
-      "sans emploi de longue duree, hors chomage", "un seul emplois salarie", "civiliste", "en conge parental"
+      "sans emploi de longue duree, hors chomage", "un seul emplois salarie", "civiliste", "en conge parental",
+      "30% par annee",
+      
+      # Military
+      "specialiste en desamorcage"
     ) |
       str_detect(master_profession_original, "etudiante a l'universite") ~ -999,
     
-    
     .default = NA
   )) |>
+  # Remaining cleanup
+  mutate(
+    ISCO_new = case_when(
+      # Remaining Managers initial grouping
+      is.na(ISCO) & is.na(ISCO_new) & str_detect(master_profession_original, "cadre|manager|responsable") ~ 1000,
+      
+      .default = ISCO_new
+    )
+  ) |> 
   mutate(
     manually_classified = case_when(!is.na(ISCO_new) ~ TRUE, .default = FALSE),
     confidence = case_when(manually_classified ~ "High", .default = confidence),
@@ -686,12 +700,25 @@ occup_final_cleaned <- occup_final |>
   left_join(occ_labels) |>                       # Merge with ISCO occupations file
   relocate(Occupation_label, .after = Name_fr) |> 
   # update the remaining_bad_matches object for reference
-  arrange(master_profession_original) ; remaining_bad_matches <- inner_join(
-    remaining_bad_matches, occup_final_cleaned |> 
-      filter(is.na(ISCO)) |> 
-      select(participant_id), by = "participant_id") |> 
-  arrange(master_profession_original, participant_id) ; pc <- occup_final_cleaned |> filter(!is.na(ISCO)) |> distinct() |> 
-  summarise(n = n_distinct(participant_id), percent = paste0(round(n / 7775, 3)*100, "%")) ; print(pc)
+  arrange(master_profession_original, participant_id, source)
+
+
+# Update the bad_matches helper file
+remaining_bad_matches <- inner_join(remaining_bad_matches, 
+                                    occup_final_cleaned |> 
+                                      filter(is.na(ISCO)) |> 
+                                      select(participant_id, source), 
+                                    by = join_by("participant_id" == "participant_id", "source" == "source")) |> 
+  arrange(master_profession_original, participant_id, source)
+
+# Print percent progress
+pc <- occup_final_cleaned |> 
+  filter(!is.na(ISCO)) |>
+  distinct() |>
+  summarise(
+    n = n_distinct(participant_id, source),
+    percent = paste0(round(n / n_tot, 3)*100, "%")
+  ) ; print(pc)
 
 filtered_remaining <- inner_join(remaining_bad_matches, inclusion_filtered)
 
@@ -705,4 +732,26 @@ b <- filtered_remaining |>
   add_count(word, sort = TRUE)
 
 # a <- filtered_remaining |> filter(str_detect(master_profession_original, "responsable|gestionnair|chef"))
-a <- remaining_bad_matches |> filter(str_detect(master_profession_original, "service|secretariat|specialist"))
+a <- remaining_bad_matches |> filter(str_detect(master_profession_original, "responsable|cadre|manager"))
+
+# Save final output ####
+occup_final_cleaned <-occup_final_cleaned |> 
+  mutate(
+    isco_full = ISCO,
+    isco_3 = case_when(ISCO == -999 ~ -999, .default = as.numeric(str_sub(ISCO, end = 3))),
+    isco_2 = case_when(ISCO == -999 ~ -999, .default = as.numeric(str_sub(ISCO, end = 2))),
+    isco_1 = case_when(ISCO == -999 ~ -999, .default = as.numeric(str_sub(ISCO, end = 1)))
+  ) %>% 
+  select(-c(ISCO, Occupation_label, ISCO_full, ISCO_new))
+
+# Label the occupations from the ISCO classifications for each code level (from 4 = "full" down to level 1)
+occup_final_cleaned <- left_join(occup_final_cleaned, occ_labels, by = c("isco_full" = "ISCO")) %>% rename(ISCO_label_full = Occupation_label)
+occup_final_cleaned <- left_join(occup_final_cleaned, occ_labels, by = c("isco_3" = "ISCO")) %>% rename(ISCO_label_3 = Occupation_label)
+occup_final_cleaned <- left_join(occup_final_cleaned, occ_labels, by = c("isco_2" = "ISCO")) %>% rename(ISCO_label_2 = Occupation_label)
+occup_final_cleaned <- left_join(occup_final_cleaned, occ_labels, by = c("isco_1" = "ISCO")) %>% rename(ISCO_label_1 = Occupation_label)
+
+occup_final_cleaned <- occup_final_cleaned |> 
+  relocate(ISCO_label_3:ISCO_label_1, .after = Name_fr) |> 
+  relocate(ISCO_label_full, .after = master_profession_original)
+
+saveRDS(occup_final_cleaned, file = here("output", "cleaned_fuzzy_classified_occupations.rds"))
