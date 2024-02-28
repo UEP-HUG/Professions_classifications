@@ -15,7 +15,7 @@ if (file.exists(here("output", "cleaned_fuzzy_classified_occupations.rds"))) {
 
 inclusion <- readRDS("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Bases_for_sharing/2023-10-11-1616_ALLincsVs012345_ALLparticipants.rds") |>
   filter(Origin != "V5_inclusion") |>
-  select(participant_id, serocov_work)
+  select(participant_id, codbar, serocov_work)
 
 # Key occupations indices from ILO paper (Berg et al., 2023)
 key_occupations <- read_xlsx(here("data", "indices_key_HCW.xlsx"), sheet = "key_occupations_ILO_ISCO2")
@@ -33,22 +33,24 @@ merged <- left_join(occup_final_cleaned, key_occupations, by = join_by("isco_2" 
     serocov_work = case_when(serocov_work ~ "Yes", .default = "No"), # recode as Yes / No
     health_workers = case_when(HCW == "Yes" ~ TRUE, .default = FALSE) # define health workers
   ) |> 
-  filter(isco_full != -999) |> # remove unclassified people
-  select(-c(HCW, label, occupational_grouping))
+  # filter(isco_full != -999) |> # remove unclassified people
+  select(-c(HCW, label, occupational_grouping)) |>
+  relocate(codbar, .after = participant_id)
 
-# # Save dataset
-# # RDS - Share
-# saveRDS(merged, file = paste0("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Base_de_données/classification_jobs_anup_jan_2024/",
-#                               format(Sys.time(), "%Y-%m-%d-%H%M_"),
-#                               "ISCO_recoded_essential_plus_health_workers.rds"))
+# Save dataset
+# RDS - Share
+saveRDS(merged, file = paste0("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Base_de_données/classification_jobs_anup_jan_2024/",
+                              format(Sys.time(), "%Y-%m-%d-%H%M_"),
+                              "ISCO_fuzzy_recoded_occupations.rds"))
+
 # RDS - output folder
 saveRDS(merged, file = here("output", paste0(format(Sys.time(), "%Y-%m-%d-%H%M_"),
                               "ISCO_fuzzy_recoded_occupations.rds")))
 
-# # CSV - Share
-# write_csv(merged, file = paste0("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Base_de_données/classification_jobs_anup_jan_2024/",
-#                                 format(Sys.time(), "%Y-%m-%d-%H%M_"),
-#                                 "ISCO_recoded_essential_plus_health_workers.csv"))
+# CSV - Share
+write_csv(merged, file = paste0("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Base_de_données/classification_jobs_anup_jan_2024/",
+                                format(Sys.time(), "%Y-%m-%d-%H%M_"),
+                                "ISCO_fuzzy_recoded_occupations.csv"))
 
 # Visually check that health workers are properly classified 
 health_w_check <- merged |> filter(health_workers == TRUE)
