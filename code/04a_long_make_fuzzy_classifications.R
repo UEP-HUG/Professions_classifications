@@ -176,7 +176,7 @@ occup <- dat_master_professions_long %>%
   ) |> 
   add_count(master_profession, sort = TRUE) %>% 
   arrange(master_profession, desc(n)) |>
-  sample_n(500) |> # Take a random sample of n rows (when trying things out, to save time)
+  # sample_n(500) |> # Take a random sample of n rows (when trying things out, to save time)
   select(participant_id, codbar, master_profession_original, master_profession, source, language.occup, date_soumission, complementary_info, management) |> 
   # Remove stopwords (trial)
   unnest_tokens(word, master_profession) |> 
@@ -243,7 +243,7 @@ matches_jaccard_prep <- bad_matches_jw |>
   select(-Name_fr_jw, -Name_fr_2_lem, -id_index, -dist_jaccard)
 
 ## Run the Jaccard matching ####
-start <- Sys.time() ; print(paste(start, " --> Processing full dataset takes about 25 mins")); matches_jaccard <- fuzzyjoin::stringdist_left_join(
+start <- Sys.time() ; print(paste(start, " --> Processing full dataset takes about 30 mins")); matches_jaccard <- fuzzyjoin::stringdist_left_join(
   x = matches_jaccard_prep,
   y = professions,
   by = c(master_profession = "Name_fr_2"), # Match against the stopwords removed versions
