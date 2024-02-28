@@ -10,13 +10,13 @@ source(here("code","01_read_in_datasets.R"))
 ### ### ###
 ## Inclusion - All ####
 dat_inclusion <- inclusion |> 
-  select(participant_id, codbar, age, serocov_work, work_pilote,  work_situation_rec_en, profession, profession_other,
+  select(participant_id,  codbar, date_soumission, age, serocov_work, work_pilote,  work_situation_rec_en, profession, profession_other,
          occupation_cat_en, work_rata,  education, education_other, education_rec_en) |> 
   rename_with(~ paste(., "inc", sep = "."), !matches(c("codbar", "participant_id")))
 
 ## Inclusion - KIDS ####  --> Still need to combine this into the master_specchio dataset
 dat_inc_kids <- inc_kids |> 
-  select(parent1_codbar, parent1_profession, parent1_occupation, parent1_occupation_other, parent1_occupation_cat) |> 
+  select(parent1_codbar, date_soumission, parent1_profession, parent1_occupation, parent1_occupation_other, parent1_occupation_cat) |> 
   rename_with(~ paste(., "inc_kids", sep = "."), !matches(c("codbar")))
 
 ## General Health ####
@@ -44,7 +44,7 @@ dat_hb_22 <- hb_22 |>
 ## Santé Travail ####
 ### 2022 ####
 dat_st_22 <- st_22 |> 
-  select(codbar, age, burn_out, employed:not_employed_comment,
+  select(codbar, date_soumission,  age, burn_out, employed:not_employed_comment,
          work_situation, work_situation_other, profession, job_sector, job_sector_other,
          commute_work_from_home:sedentary_work_other, protective_equipment:protection_other,
          burn_out:burn_out_result_other, pandemic_change:impact_pandemic_comment
@@ -53,7 +53,7 @@ dat_st_22 <- st_22 |>
 
 ### 2023 ####
 dat_st_23 <- st_23 |> 
-  select(codbar, age, worked:workplace_size,years_of_service:move_work_other_text, job_sector, -c(job_sector_commerce:job_sector_99)) |> 
+  select(codbar, date_soumission, age, worked:workplace_size,years_of_service:move_work_other_text, job_sector, -c(job_sector_commerce:job_sector_99)) |> 
   rename_with(~ paste(., "st_23", sep = "."), !matches(c("codbar")))
 
 
