@@ -253,10 +253,10 @@ matches_jaccard_prep <- bad_matches_jw |>
 start <- Sys.time() ; print(paste(start, " --> Processing full dataset takes about 25 mins")); matches_jaccard <- fuzzyjoin::stringdist_left_join(
   x = matches_jaccard_prep,
   y = professions,
-  by = c(master_profession_lem = "Name_fr_2_lem"), # Match against the stopwords removed versions
+  by = c(master_profession = "Name_fr_2"), # Match against the stopwords removed versions
   method = "jaccard", q = 3, # q = the size of the q-grams
   distance_col = "dist_jaccard",
-  max_dist = 0.7 # Set a cutoff for the matches
+  max_dist = 0.8 # Set a cutoff for the matches
 ) |> 
   group_by(participant_id) |>
   # Keep the n best matches (least "distance")
