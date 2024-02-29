@@ -66,8 +66,12 @@ dat_master_professions_long <- master_dataset |>
   ) |> 
   relocate(c(master_profession,complementary_info, management), .after = source) |> 
   select(participant_id, codbar, source, master_profession, complementary_info, management, date_soumission) |>
-  mutate(remove = is.na(master_profession) & is.na(management)) |> 
-  filter(remove == FALSE) |> select(-remove)
+  mutate(
+    master_profession = case_when(
+      codbar == "1104061" & source == "st_22" ~ "Administration et Ressources humaines",
+      codbar == "1710291" & source == "st_22" ~ "Manager",
+      .default = master_profession)) |> 
+  filter(!is.na(master_profession))
 
 ### ### ###
 # Keep only Master Dataset ####
