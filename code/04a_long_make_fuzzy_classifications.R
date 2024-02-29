@@ -179,7 +179,7 @@ occup <- dat_master_professions_long %>%
   ) |> 
   add_count(master_profession, sort = TRUE) %>% 
   arrange(master_profession, desc(n)) |>
-  sample_n(500) |> # Take a random sample of n rows (when trying things out, to save time)
+  # sample_n(500) |> # Take a random sample of n rows (when trying things out, to save time)
   select(participant_id, codbar, master_profession_original, master_profession, source, language.occup, date_soumission, complementary_info, management) |> 
   # Remove stopwords (trial)
   unnest_tokens(word, master_profession) |> 
