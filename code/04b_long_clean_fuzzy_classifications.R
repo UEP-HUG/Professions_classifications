@@ -61,6 +61,7 @@ occup_final_cleaned <- occup_final |>
                                       "head of policy and advocacy, msf access campaign, msf", "coordinateur d'une association",
                                       "responsable secteur service social", "fonctionnaire nations unis", "adjointe d'un service social communal",
                                       "administrateur cooperative logement", "gerant technique dans une cooperative", 
+                                      "administrateur d'une cooperative",
                                       "directrice du service de l information et porte-parole de l'onu a geneve") ~ 1114, 
     #### Managing directors and chief executives ####
     master_profession_original %in% c("ceo", "adjoins du directeur", "manager alimentaire", 
@@ -79,7 +80,7 @@ occup_final_cleaned <- occup_final |>
                                       "gestionnaire des risques financiers", "gerant de fonds de placement",
                                       "gerant d'investissements", "directeur asset management", "chef des investissements",
                                       "gestionnaire de risque", "gestionnaire des risques", "responsable de l'investissement",
-                                      "responsable des investissements") ~ 1211,
+                                      "responsable des investissements", "administrative and finance manager") ~ 1211,
     ##### Human Resources managers ####
     master_profession_original %in% c("administratrice ressources humaines", "cheffe de service rh", "manager ressources humaines",
                                       "manager rh", "responsable de l'unite de recruitement et soutiens de staff") ~ 1212,
@@ -101,7 +102,7 @@ occup_final_cleaned <- occup_final |>
     master_profession_original %in% c("directeur, pharmacovigilance", "chef de l'imprimerie de l'onu", "responsable imprimerie", "chefs d'equipe industrie pharmaceutique") ~ 1321,
     master_profession_original %in% c("manager du department logistique", "chef de team logistique", "chef de shipping et transport et logistique",
                                       "responsable du service achats et biomedical", "chef de secteur logistique et approvisionnement",
-                                      "gestionnaire de sites") ~ 1324,
+                                      "gestionnaire de sites", "responsables achats, logistique et cost controle") ~ 1324,
     #### Information and communications technology service managers ####
     master_profession_original %in% c("directeur risk management et it dans societe financiere", "cadre superieur dans l'informatique",
                                       "senior manager it", "chef d'equipe informatique", "cheffe de service communication palexpo sa",
@@ -125,7 +126,7 @@ occup_final_cleaned <- occup_final |>
                                       "chef de donnez et recherche, programme de migratiin, oms", "cheffe de secteur socio educatif",
                                       "cheffe de secteur socio educatif-", "responsable centre hebergement urgence", "adjointe d'un service social communal",
                                       "maitre socio-educative (msp)", "responsable d'un service d'accompagnement de personnes a mobilite reduite",
-                                      "chef de secteur socioprofessionnel", "cheffe de secteur socio-educatif",
+                                      "chef de secteur socioprofessionnel", "cheffe de secteur socio-educatif", "management service social",
                                       "responsable assurances sociales") ~ 1344,
     ##### Education managers ####
     master_profession_original %in% c("psychomotricienne a 20% et directice d'une ecole de danse 50%", "directeur centre de formation",
@@ -143,7 +144,7 @@ occup_final_cleaned <- occup_final |>
                                       "responsable adjointe gestion des lits et du pool") ~ 141,
     master_profession_original %in% c("cheffe de cuisine et de la restauration") ~ 1412,
     #### Retail and wholesale trade managers ####
-    master_profession_original %in% c("directeur de plusieurs filiales dans le commerce de detail du luxe", "directrice magasin", "editrice de litterture, directrice d'une maison independante d'edition") ~ 142,
+    master_profession_original %in% c("directeur de plusieurs filiales dans le commerce de detail du luxe", "directrice magasin", "editrice de litterture, directrice d'une maison independante d'edition", "retail support manager, chef de rayon cave, conseiller et expert en vin") ~ 142,
     #### Other services managers ####
     master_profession_original %in% c("") ~ 143,
     master_profession_original %in% c("responsable d,un groupe de conducteurs") ~ 1439,
@@ -178,7 +179,7 @@ occup_final_cleaned <- occup_final |>
     master_profession_original %in% c("concepteurs graphiques, multimedia - graphistes") ~ 216,
     master_profession_original %in% c("architecte adjointe de direction", "associe de mon bureau d'architecte", 
                                       "responsable du service technique - architecte", "salariee a la hes-so et architecte independante") ~ 2161,
-    master_profession_original %in% c("ing transports", "employe espaces verts") ~ 2164,
+    master_profession_original %in% c("ing transports", "employe espaces verts", "responsable du secteur espaces verts d'une commune") ~ 2164,
     ##### Graphic and multimedia designers ####
     master_profession_original %in% c("graphiste et webdesigner en recherche d'emploi.") ~ 2166,
     ### Health Professionals ####
@@ -230,7 +231,7 @@ occup_final_cleaned <- occup_final |>
       "pharmacienne cheffe de projet", "pharmacienne clinicienne", "pharmacienne doctorante",
       "pharmacienne had", "pharmacienne responsable", "pharmaciens", "pharmacist") ~ 2262,
     ##### Environmental and occupational health and hygiene professionals ####
-    master_profession_original %in% c("maitre de readaptation") ~ 2263,
+    master_profession_original %in% c("") ~ 2263,
     ##### Physiotherapists ####
     master_profession_original %in% c(
       "physio", "physiotherapeute", "physiotherapeute cardio respiratoire", 
@@ -266,8 +267,9 @@ occup_final_cleaned <- occup_final |>
     master_profession_original %in% c("remplacant en ecole primaire", 
                                       "je fais des remplacements a l'ecole primaire parralelement a mes etudes") ~ 2341,
     master_profession_original %in% c("je travaillais a la garderie du village et faisais des remplacements a l'ecole du village",
-                                      "auxilaire educateur petite enfance et laborantin biologie", "auxiliaire remplacante en creche") ~ 2342,
-    master_profession_original %in% c("training specialist", "gestionnaire des projets educatives") ~ 235,
+                                      "auxilaire educateur petite enfance et laborantin biologie", "auxiliaire remplacante en creche",
+                                      "maitresse de creche et doula") ~ 2342,
+    master_profession_original %in% c("training specialist", "gestionnaire des projets educatives", "adjointe pedagogique") ~ 235,
     master_profession_original %in% c("chargee de formation", "activite independante pour la conception d'examens, la gestion d'un site") ~ 2351,
     master_profession_original %in% c("enseignant d'allemand (niveau collegial/gymnasial)") ~ 2353,
     master_profession_original %in% c("comedienne et professeure au conservatoire de geneve", "cheffe de choeur, professeur de musique") ~ 2354,
@@ -278,13 +280,16 @@ occup_final_cleaned <- occup_final |>
     
     ### Business and administration professionals ####
     master_profession_original %in% c(
-      "administratif financier", "conseil en gestion des risques", "gestionnaire de fortune indepedant",
-      "gestionnaire financiere et administrative", "gestionnaire de risques", "gestionnaire financiere administrative",
-      "responsable des risques et de la conformite", "responsable risques", "bancaire", "gestionnaire assurance") ~ 241,
+      "administratif financier", "gestionnaire de fortune indepedant",
+      "gestionnaire financiere et administrative", "gestionnaire financiere administrative", 
+      "bancaire", "gestionnaire assurance",
+      "responsable grands comptes") ~ 241,
     master_profession_original %in% c("analyste en conformite", "assistante audit", "compliance manager", "chef de l'audit interne",
                                       "auditrice interne", "auditeur interne") ~ 2411,
     master_profession_original %in% c("independant - financial management services", "gestionnaire de patrimoine") ~ 2412,
-    master_profession_original %in% c("gestionnaire de fortune - middel office") ~ 2413,
+    master_profession_original %in% c("gestionnaire de fortune - middel office", "risl manager, membre de conseil d'administration, enseignante",
+                                      "responsable des risques et de la conformite", "responsable risques", "gestionnaire de risques",
+                                      "conseil en gestion des risques") ~ 2413,
     master_profession_original %in% c("2 jobs - secretaire sociale 50% + independante (consultante en entreprise) 50%",
                                       "yield director", "gestionnaire referente remuneration") ~ 242,
     master_profession_original %in% c("analystes, gestion et organisation", "coseillier aupres de la direction", 
@@ -364,6 +369,7 @@ occup_final_cleaned <- occup_final |>
     master_profession_original %in% c("") ~ 313,
     master_profession_original %in% c("technique de l eau", "technicien traiteur d'eau") ~ 3132,
     master_profession_original %in% c("") ~ 314,
+    master_profession_original %in% c("garde de l'environnement") ~ 3143,
     master_profession_original %in% c("") ~ 315,
     master_profession_original %in% c("aircraft coordinator", "agent autorite aviation", "agent d'assistance aeroportuaire",
                                       "aircraft coordinateur", "gestionnaire des aires de trafic", "autorite aviation") ~ 3154,
@@ -405,7 +411,7 @@ occup_final_cleaned <- occup_final |>
       "sante travail", "specialiste de sante au travail", "assistante dentaire",
       "assistants en medecine dentaire", "hygieniste dentaire", "hygienistes dentaires",
       "hygieniste dentaire (desolee, je ne sais pas dans quelle categorie je dois le classer)",
-      "opticien", "assistance maternel", "agent de sterilisation"
+      "opticien", "assistance maternel", "agent de sterilisation", "sante au travail"
     ) ~ 325,
     master_profession_original %in% c("gestionnaire administrative surete",
                                       "responsable assurance qualite hygiene etsecurite") ~ 3257,
@@ -465,7 +471,10 @@ occup_final_cleaned <- occup_final |>
                                       "coordinatrice de projets dans le milieu academique international", "international development",
                                       "professionnelle en developpement international", 
                                       "representative aupres l'onu pour organisation non-gouvernmentale internationale",
-                                      "maitre de readaptation (conseiller specialiste en insertion)", "coordinatrice animations socioculturelles",
+                                      "maitre de readaptation (conseiller specialiste en insertion)", 
+                                      "maitre de readaptation aupres de jeunes",
+                                      "maitre de readaptation", "maitre readaptation", "maitte de readaptation",
+                                      "coordinatrice animations socioculturelles",
                                       "socio educateur", "socio-educateur", "socioeducatrice", "referente socio-educative parascolaire giap",
                                       "centre d'integration professionnel", "collaboratrice de la croix rouge", "animatrice nature et educatrice du jeune enfant",
                                       "animatrice qualifiee", "conseillere et responsable de mandats specifiques (societe de conseil dans la prevention des risques psychosociaux)"
@@ -510,7 +519,7 @@ occup_final_cleaned <- occup_final |>
     ### Numerical and material recording clerks ####
     master_profession_original %in% c("aide comptable et administrative", "aide-comptable dans un structure de petit-enfance etatique") ~ 431,
     master_profession_original %in% c("assistante fiscale", "fiscaliste", "fiscaliste au sein d'une entreprise multi-nationale",
-                                      "gestionnaire facturation statististique a geneve aeroport") ~ 4311,
+                                      "gestionnaire facturation statististique a geneve aeroport", "responsable fscturation") ~ 4311,
     master_profession_original %in% c("gestionnaire salaires et assurance sociales", "gestionnaire salaires et assurances sociales") ~ 4313,
     master_profession_original %in% c("disposante", "disposante", "coordinateur logistique", "agent operations", "responsable logistique") ~ 432,
     master_profession_original %in% c("gestionnaire de sous-traitance et stock", "gestionnaire de stock (logisticien de stockage)",
@@ -519,6 +528,7 @@ occup_final_cleaned <- occup_final |>
     ### Other clerical support workers ####
     master_profession_original %in% c("gestionnaire administrative des residants") ~ 441,
     str_detect(master_profession_original, "adjointe administrative - support rh|administratrice rh") ~ 4416,
+    master_profession_original %in% c("administration et ressources humaines") ~ 4416,
     master_profession_original %in% c("job d'etudiant dans l'administratif", "conseiller de ventes superviseur") ~ 4419,
     ## **Service and sales workers** ####
     ### Personal service workers ####
@@ -526,7 +536,8 @@ occup_final_cleaned <- occup_final |>
     str_detect(master_profession_original, "agent escale|agente escale|agent escale fret") ~ 5111,
     master_profession_original %in% c("assistance au pmr a l'aeroport", "gestionnaire en information voyageurs",
                                       "coordinateur d escale", "superviseur service passagers swissport", "superviseurs service passagers",
-                                      "domaine aerien/ controle des passagers", "agent de checkin", "agent escale aeroportuaire") ~ 5111,
+                                      "domaine aerien/ controle des passagers", "agent de checkin", "agent escale aeroportuaire",
+                                      "agent aeriport") ~ 5111,
     master_profession_original %in% c("") ~ 512,
     master_profession_original %in% c("") ~ 513,
     master_profession_original %in% c("employee de restaurant en ems", "employe cafeteria dans un ems") ~ 5131,
@@ -616,6 +627,7 @@ occup_final_cleaned <- occup_final |>
     master_profession_original %in% c("conseiller production laitiere") ~ 7513,
     master_profession_original %in% c("") ~ 752,
     master_profession_original %in% c("") ~ 753,
+    master_profession_original %in% c("maman au foyer et couturiere") ~ 7531,
     master_profession_original %in% c("") ~ 754,
     master_profession_original %in% c("assistante qualite") ~ 7543,
     
@@ -663,7 +675,7 @@ occup_final_cleaned <- occup_final |>
     master_profession_original %in% c("") ~ 961,
     master_profession_original %in% c("") ~ 962,
     master_profession_original %in% c("coursiere alimentaire") ~ 9621,
-    master_profession_original %in% c("gestionnaire parc vehicule", "responsable du parc de vehicules ga") ~ 9629,
+    master_profession_original %in% c("gestionnaire parc vehicule", "responsable du parc de vehicules ga", "responsable du parc de vehicule") ~ 9629,
     
     ## **Military** ####
     master_profession_original %in% c("") ~ 011,
@@ -672,10 +684,13 @@ occup_final_cleaned <- occup_final |>
     
     ## **Not possible to define** ####
     master_profession_original %in% c(
-      "actuellement mere au foyer - avant banquiere", "au foyer", "maman a la maison", "actuellement mere au foyer, avant cadre financier",
+      "actuellement mere au foyer - avant banquiere", "au foyer", "maman a la maison", "maman au foyer",
+      "actuellement mere au foyer, avant cadre financier", "salarie", "salariee", "salaries",
       "aucun", "aucune", "en activite", "pas d'activite non salariee","elle a 5 ans - pas pertinent!",
       "en formation", "en formation (enseignement)", "rechercheuse, couramment sans emploi",
-      "bachelor epfl architecture, actuellement en stage obligatoire", "retraite", "avs", "etudiant", "etudiant...", "etudiante",
+      "bachelor epfl architecture, actuellement en stage obligatoire", "retraite", "avs", "retraite depuis longtemps (telexiste)",
+      "retraite hyper actif", "retraite mais j etais dans la finance", "retraitee", "rien",
+      "etudiant", "etudiant...", "etudiante",
       "etudiante en medecine", "etudiante, stage en traduction", "je suis etudiante", "pc / etudiant medecine",
       "pas repondu", "je n'ai pas ce type d'activites (bug dans le questionnaire)", "je n'ai pas de conjoint",
       "je n'ai pas ete salarie depuis mon mariage", "je n'ai pas plusieurs activites", "je n'ai pas plusieurs emplois",
