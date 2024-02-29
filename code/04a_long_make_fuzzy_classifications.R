@@ -121,7 +121,7 @@ prof_stop <- professions |>
   distinct()
 
 # Merge back in with the professions object
-professions <- left_join(professions, prof_stop) |> select(-language.Name)
+professions <- left_join(professions, prof_stop) |> select(-language.Name, -rowid)
 
 rm(prof_stop, professions_fr, professions_en, professions_fr_5) # remove intermediate objects
 
@@ -138,13 +138,16 @@ occup <- dat_master_professions_long %>%
     master_profession = str_squish(str_to_lower(master_profession)),             # Convert all capital letters to small letters
     
     complementary_info = stringi::stri_trans_general(str = complementary_info, 
-                                                         id = "Latin-ASCII"),
+                                                     id = "Latin-ASCII"),
     complementary_info = str_squish(str_to_lower(complementary_info)),
     ISCO = NA                                                               # Empty column that we'll fill in the next steps
   ) %>%
   mutate(
     #
     master_profession_original = master_profession, # keep original separately
+    master_profession = case_when(
+      master_profession %in% c("-", "--", "---", ".", "///", "::::", "?", "...", "0", "120000", "30% par année") ~ complementary_info,
+      .default = master_profession),
     master_profession = str_replace_all(master_profession, "\\.", ""),
     master_profession = str_replace(master_profession, "l'|d'", ""),  # remove the l' and d'
     # use "\\b" on each side of a string to indicate that the match should be on a whole word
@@ -166,17 +169,17 @@ occup <- dat_master_professions_long %>%
     master_profession = str_replace(master_profession, "tpg", "bus"),
     master_profession = str_replace(master_profession, "\\bems\\b", "etablissement medico social"),
     master_profession = str_replace(master_profession, "\\bhets\\b", "travail social"),
-    # # master_profession = str_replace(master_profession, "", ""),
-    # # master_profession = str_replace(master_profession, "", ""),
-    # # master_profession = str_replace(master_profession, "", ""),
-    # # master_profession = str_replace(master_profession, "", ""),
+    # master_profession = str_replace(master_profession, "", ""),
+    # master_profession = str_replace(master_profession, "", ""),
+    # master_profession = str_replace(master_profession, "", ""),
+    # master_profession = str_replace(master_profession, "", ""),
     
     # resquish in case spaces were introduced
     master_profession = str_squish(master_profession)
   ) |> 
   add_count(master_profession, sort = TRUE) %>% 
   arrange(master_profession, desc(n)) |>
-  # sample_n(500) |> # Take a random sample of n rows (when trying things out, to save time)
+  sample_n(500) |> # Take a random sample of n rows (when trying things out, to save time)
   select(participant_id, codbar, master_profession_original, master_profession, source, language.occup, date_soumission, complementary_info, management) |> 
   # Remove stopwords (trial)
   unnest_tokens(word, master_profession) |> 
@@ -217,8 +220,8 @@ cleaner_matches_jw <- matches_jw |>
       is.na(ISCO)| # no match
         dist_jw >= 0.06 ~ TRUE, # distance >= specified cutoff with Jaro-Winkler distance
       .default = FALSE)) |> 
-  arrange(master_profession, participant_id, source, dist_jw) |>  # Arrange best match first for each participant_id
   group_by(participant_id, source) |> 
+  arrange(participant_id, source, dist_jw) |> 
   mutate(
     id_index = as.numeric(fct_reorder(factor(Name_fr), dist_jw)), # index of order of top matches by participant_id
     # For matches within a participant_id, specify whether or not the top match is good
@@ -226,21 +229,24 @@ cleaner_matches_jw <- matches_jw |>
       id_index == 1 & NA_or_high_distance == FALSE ~ "Good",
       id_index == 1 & NA_or_high_distance == TRUE ~ "Not good",
       .default = NA)) |> 
-  ungroup() |> 
+  arrange(participant_id, source, id_index) |>  # Arrange best match first for each participant_id
+  rowid_to_column() |>
   tidyr::fill(group_top_match, .direction = "down") |> # Fill the variable down to the whole group
-  filter(!(group_top_match == "Good" & id_index != 1)) # Remove secondary matches when a top match is "Good"
+  ungroup() |> 
+filter(!(group_top_match == "Good" & id_index != 1)) # Remove secondary matches when a top match is "Good"
 
 ## Get the good /bad matches ####
-good_matches_jw <- cleaner_matches_jw |> filter(group_top_match == "Good")
+good_matches_jw <- cleaner_matches_jw |> filter(group_top_match == "Good") |> 
+  group_by(participant_id, source) |> slice_min(order_by = rowid, n = 1)
 bad_matches_jw <- cleaner_matches_jw |> filter(group_top_match == "Not good")
 
 # Jaccard fuzzy matching ####
 ## Initialize dataset from bad_matches ####
 matches_jaccard_prep <- bad_matches_jw |> 
-  select(-rowid, -NA_or_high_distance, - group_top_match) |>  # change dist to dist_jw
-  rename(Name_fr_jw = Name_fr, Name_fr_2_jw = Name_fr_2, ISCO_jw = ISCO) |> 
-  filter(id_index == 1) |> 
-  select(-Name_fr_jw, -Name_fr_2_lem, -id_index, -dist_jaccard)
+  select(-NA_or_high_distance, - group_top_match) |>  # change dist to dist_jw
+  rename(Name_fr_jw = Name_fr, Name_fr_2_jw = Name_fr_2, ISCO_jw = ISCO) |>
+  group_by(participant_id, source) |> slice_min(order_by = rowid, n = 1) |> # keep only the top entry
+  select(-Name_fr_jw, -Name_fr_2_lem, -id_index, -dist_jaccard, -rowid)
 
 ## Run the Jaccard matching ####
 start <- Sys.time() ; print(paste(start, " --> Processing full dataset takes about 30 mins")); matches_jaccard <- fuzzyjoin::stringdist_left_join(
@@ -263,8 +269,8 @@ cleaner_matches_jaccard <- matches_jaccard |>
       is.na(ISCO)| # no match
         dist_jaccard >= 0.35 ~ TRUE, # distance >= specified cutoff with Jaccard distance
       .default = FALSE)) |> 
-  arrange(master_profession, participant_id, source, dist_jaccard) |>  # Arrange best match first for each participant_id
   group_by(participant_id, source) |> 
+  arrange(participant_id, source, dist_jaccard) |> 
   mutate(
     id_index = as.numeric(fct_reorder(factor(Name_fr), dist_jaccard)), # index of order of top matches by participant_id
     # For matches within a participant_id, specify whether or not the top match is good
@@ -272,12 +278,15 @@ cleaner_matches_jaccard <- matches_jaccard |>
       id_index == 1 & NA_or_high_distance == FALSE ~ "Good",
       id_index == 1 & NA_or_high_distance == TRUE ~ "Not good",
       .default = NA)) |> 
-  ungroup() |> 
+  arrange(participant_id, source, id_index) |>  # Arrange best match first for each participant_id
+  rowid_to_column() |>
   tidyr::fill(group_top_match, .direction = "down") |> # Fill the variable down to the whole group
+  ungroup() |> 
   filter(!(group_top_match == "Good" & id_index != 1)) # Remove secondary matches when a top match is "Good"
 
 ## Separate to good / bad matches ####
-good_matches_jaccard <- cleaner_matches_jaccard |> filter(group_top_match == "Good")
+good_matches_jaccard <- cleaner_matches_jaccard |> filter(group_top_match == "Good") |> 
+  group_by(participant_id, source) |> slice_min(order_by = rowid, n = 1)
 bad_matches_jaccard <- cleaner_matches_jaccard |> filter(group_top_match == "Not good")
 
 ## Get the ones that have a common match for JW and Jaccard ####
@@ -285,7 +294,7 @@ better_bad_matches_jaccard <- bad_matches_jaccard |>
   mutate(similar_ISCO = str_sub(ISCO_jw, 1,3) == str_sub(ISCO, 1,3)) |> 
   filter(similar_ISCO) |> 
   group_by(participant_id, source) |> 
-  slice_min(id_index) |> 
+  slice_min(rowid) |> 
   arrange(master_profession) |> 
   ungroup()
 
@@ -325,7 +334,7 @@ occup_final <- occup_matched |>
   mutate(confidence = case_when(dist_jaccard > 0.2 & confidence == "High" ~ "Medium", .default = confidence)) |> 
   distinct() |> 
   arrange(master_profession_original) |> 
-ungroup()
+  ungroup()
 
 saveRDS(occup_final, file = here("output", "fuzzy_classified_occupations_to_clean_long.rds"))
 saveRDS(remaining_bad_matches, file = here("output", "remaining_bad_matches_long.rds"))
