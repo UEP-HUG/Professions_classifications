@@ -336,5 +336,10 @@ occup_final <- occup_matched |>
   arrange(master_profession_original) |> 
   ungroup()
 
+# Save final files ####
 saveRDS(occup_final, file = here("output", "fuzzy_classified_occupations_to_clean_long.rds"))
+# Add a file with date/time (as backup, this is a costly process to run...)
+saveRDS(occup_final, file = here("output", paste0(format(Sys.time(), "%Y-%m-%d-%H%M_"), "fuzzy_classified_occupations_to_clean_long.rds")))
 saveRDS(remaining_bad_matches, file = here("output", "remaining_bad_matches_long.rds"))
+# Add a file with date/time (as backup, this is a costly process to run...)
+saveRDS(remaining_bad_matches, file = here("output", paste0(format(Sys.time(), "%Y-%m-%d-%H%M_"), "remaining_bad_matches_long.rds")))
