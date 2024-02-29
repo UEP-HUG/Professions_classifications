@@ -34,24 +34,24 @@ merged <- left_join(occup_final_cleaned, key_occupations, by = join_by("isco_2" 
     health_workers = case_when(HCW == "Yes" ~ TRUE, .default = FALSE) # define health workers
   ) |> 
   # filter(isco_full != -999) |> # remove unclassified people
-  select(-c(HCW, label, occupational_grouping)) |>
+  select(-c(HCW, label, occupational_grouping, Name_fr)) |>
   relocate(codbar, .after = participant_id)
 
 # Save dataset ####
 ## Local ####
-# # RDS
-# saveRDS(merged, file = here("output", paste0(format(Sys.time(), "%Y-%m-%d-%H%M_"),
-#                                             "ISCO_fuzzy_recoded_occupations.rds")))
+# RDS
+saveRDS(merged, file = here("output", paste0(format(Sys.time(), "%Y-%m-%d-%H%M_"),
+                                            "ISCO_fuzzy_recoded_occupations.rds")))
 
 ## In the Share drive ####
-# # RDS
-# saveRDS(merged, file = paste0("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Base_de_données/classification_jobs_anup_jan_2024/",
-#                               format(Sys.time(), "%Y-%m-%d-%H%M_"),
-#                               "ISCO_fuzzy_recoded_occupations.rds"))
-# # CSV
-# write_csv(merged, file = paste0("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Base_de_données/classification_jobs_anup_jan_2024/",
-#                                 format(Sys.time(), "%Y-%m-%d-%H%M_"),
-#                                 "ISCO_fuzzy_recoded_occupations.csv"))
+# RDS
+saveRDS(merged, file = paste0("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Base_de_données/classification_jobs_anup_jan_2024/",
+                              format(Sys.time(), "%Y-%m-%d-%H%M_"),
+                              "ISCO_fuzzy_recoded_occupations.rds"))
+# CSV
+write_csv(merged, file = paste0("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Base_de_données/classification_jobs_anup_jan_2024/",
+                                format(Sys.time(), "%Y-%m-%d-%H%M_"),
+                                "ISCO_fuzzy_recoded_occupations.csv"))
 
 # Visually check that health workers are properly classified 
 health_w_check <- merged |> filter(health_workers == TRUE)
