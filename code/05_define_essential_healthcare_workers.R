@@ -27,15 +27,20 @@ merged <- left_join(occup_final_cleaned, key_occupations, by = join_by("isco_2" 
   # Merge with indices for "healthcare worker"
   left_join(HCW, by = join_by("isco_full" == "ISCO")) |> 
   # Merge with inclusion for serocov_work variable
-  left_join(inclusion) |> 
+  left_join(inclusion) |> # comment out for bus santé
   mutate(
-    key_occupation = case_when(key_occupation == "TRUE" ~ TRUE, .default = FALSE), # define essential / key worker
-    serocov_work = case_when(serocov_work ~ "Yes", .default = "No"), # recode as Yes / No
-    health_workers = case_when(HCW == "Yes" ~ TRUE, .default = FALSE) # define health workers
+    key_occupation = case_when(is.na(isco_full) ~ NA,
+                               key_occupation == "TRUE" ~ TRUE, .default = FALSE), # define essential / key worker
+    # serocov_work = case_when(serocov_work ~ "Yes", .default = "No"), # recode as Yes / No
+    health_workers = case_when(is.na(isco_full) ~ NA,
+                               HCW == "Yes" ~ TRUE, .default = FALSE) # define health workers
   ) |> 
   # filter(isco_full != -999) |> # remove unclassified people
   select(-c(HCW, label, occupational_grouping, Name_fr)) |>
   relocate(codbar, .after = participant_id)
+  # Bus santé dataset-specific
+  # mutate(Code = str_split_i(participant_id, "_", 1)) |> relocate(Code, .after = participant_id)
+  
 
 # Save dataset ####
 ## Local ####
