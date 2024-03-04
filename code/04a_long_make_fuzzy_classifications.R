@@ -22,6 +22,12 @@ if (file.exists(here("output", "dat_master_professions_long.rds"))) {
   source(here("code","03_long_participants with profession data.R"))
 } 
 
+# For Bus_santé classification
+dat_BS <- readxl::read_xlsx("P:/ODS/DMCPRU/UEPDATA/Pour_user/Pour_Anshu/Code_professions_BS/code_profession.xlsx", sheet = "Feuil1")|> 
+  rowid_to_column() |> 
+  mutate(source = "bus_sante", participant_id = paste(Code,rowid, sep = "_"),  master_profession = Professions, 
+         codbar = NA, complementary_info = NA, date_soumission = NA, management = NA)
+
 # French "stopwords" (common words) list to remove from professions
 stopwords_fr <- tibble(word = stopwords("fr")) |> 
   filter(!word %in% c("avions", "son", "non")) |> # remove these ones
@@ -127,7 +133,7 @@ rm(prof_stop, professions_fr, professions_en, professions_fr_5) # remove interme
 
 
 # Clean up profession entries for matching ####
-occup <- dat_master_professions_long %>% 
+occup <- dat_master_professions_long %>% # replace with dat_BS if looking at Bus santé dataset
   # (Convert accent characters, e.g. "é" to "e", convert all capital letters to small letters)
   mutate(
     lang_Name_cld2 = cld2::detect_language(master_profession),
