@@ -117,7 +117,7 @@ occup_final_cleaned <- occup_final |>
       "directrice de secteur petite enfance", "responsable de secteur parascolaire") ~ 1341,
     ##### Health services managers ####
     master_profession_original %in% c(
-      "cadre de sante", "cadre superieur de sante", "cadres de direction, services de sante", "infirmiere responsable d'unite en ems",
+      "cadre de sante", "cade de sante", "cadre superieur de sante", "cadres de direction, services de sante", "infirmiere responsable d'unite en ems",
       "cqdre de sante", "directeur rse sante surete environnement", "directrice des soins",
       "sante publique haut fonctionnaire, onu (oms)") ~ 1342,
     ##### Aged care services managers ####
