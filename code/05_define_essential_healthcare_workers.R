@@ -72,7 +72,7 @@ merged <- left_join(occup_final_cleaned, key_occupations, by = join_by("isco_2" 
     )
   ) |> 
   # filter(isco_full != -999) |> # remove unclassified people
-  select(-c(HCW, label, occupational_grouping, Name_fr)) |>
+  select(-c(HCW, label, occupational_grouping, Name_fr, job_sector.st_22, job_sector.st_23)) |>
   relocate(codbar, .after = participant_id)
   # Bus santé dataset-specific
   # mutate(Code = str_split_i(participant_id, "_", 1)) |> relocate(Code, .after = participant_id)
