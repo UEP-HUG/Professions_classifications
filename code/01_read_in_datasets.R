@@ -119,6 +119,47 @@ work_dict_poste <- read_xlsx("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Bas
   mutate(poste = row_number()-1) |> select(-N) |> 
   add_row(Occupation = "Other", `Description of jobs` = "Other", poste = 99) # Add row of Other
 
+# From https://github.com/UEP-HUG/SEROCOV-WORK/blob/main/basemaking/4_init_dat.R
+# I think this is more accurate, and need to find an updated variable "poste_final" in the dataset for better matches
+# Right now in our data the poste only goes to 30, not 31
+work_dict_poste = enframe(c(
+  "Personnel médical (médecin, chirurgien(ne)...)" = "0",
+  "Infirmier(ère), aide-soignant(e)" = "1",
+  "Autre professionnel de santé ou personnel paramédical" = "2",
+  "Pompier, secouriste, ambulancier" = "3",
+  "Personnel des pompes funèbres" = "23",
+  "Pharmacien ou assistant pharmacien" = "4",
+  "Aide à domicile, aide à la personne, aide-ménagère" = "5",
+  "Caissier(e)," = "6",
+  "Personnel des supermarchés ou petits commerces alimentaires" = "24",
+  "Livreur (à domicile)" = "7",
+  "Conducteur des transports en commun" = "8",
+  "Conducteur de VTC, taxi" = "9",
+  "Responsable clientèle/accueil des agences bancaires" = "10",
+  "Personnel des stations-services" = "11",
+  "Policier, gendarme" = "12",
+  "Postier  (distribution)" = "13",
+  "Guichetier (poste, banque, etc)" = "25",
+  "Agent de nettoyage, de propreté" = "14",
+  "Agent de sécurité" = "15",
+  "Artisan/salarié du bâtiment" = "16",
+  "Conducteur routier" = "17",
+  "Enseignant(e)" = "18",
+  "Puéricultrice, garde enfants" = "26",
+  "Agriculteur" = "19",
+  "Cuisinier, restaurateur," = "27",
+  "Travailleur social" = "20",
+  "Chercheur(se) ou personnel participant à la recherche dans le domaine de la santé" = "21",
+  "Journaliste ou métier de l'information" = "22",
+  "Fonctions support (administratif, secrétariat, comptabilité, ressources humaines, etc)" = "28",
+  "Chargé-e de communication, de marketing" = "29",
+  "Directeur, directeur adjoint" = "30",
+  "Finance, management, law, engineering" = "31",
+  "Autre" = "99"
+)) |> 
+  mutate(value = as.integer(value)) |> 
+  rename(Occupation = name, poste = value) |> arrange(poste)
+
 work_dict_sector <- read_xlsx("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Base_de_données/classification_jobs_anup_jan_2024/Data_dict_WORK_final_anonym.xlsx", 
                              sheet = "Feuil4", skip = 1) |> 
   mutate(sect_activite = row_number()) |> select(-`Participating institutions/facilities`) |> 
