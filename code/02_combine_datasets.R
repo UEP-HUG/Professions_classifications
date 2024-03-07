@@ -59,7 +59,7 @@ dat_st_23 <- st_23 |>
 
 ## WORK 2020 ####
 dat_work <- work |> 
-  select(ID, codbar, Hug_Date_Derniere_Soumission_C, sexe, annee_naissance, profession, date_soumission, Occupation, Sector) |> 
+  select(codbar, sexe, profession, date_soumission, poste_2_autre, poste_final, Secteur_group) |> 
   rename_with(~ paste(., "WORK", sep = "."), !matches(c("codbar")))
 
 ### ### ###

@@ -42,6 +42,8 @@ dat_master_professions_long <- master_dataset |>
       .default = NA
     ),
     complementary_info = case_when(
+      source == "Work" ~ if_else(is.na(poste_2_autre.WORK), Secteur_group.WORK,
+                                 paste(poste_2_autre.WORK, Secteur_group.WORK, sep = " | ")),
       source == "inc_kids" ~ if_else(is.na(parent1_occupation_other.inc_kids), parent1_occupation.inc_kids,
                                      paste(parent1_occupation.inc_kids, parent1_occupation_other.inc_kids, sep = " | ")),
       source == "st_22" ~ if_else(is.na(job_sector_other.st_22), job_sector.st_22,
