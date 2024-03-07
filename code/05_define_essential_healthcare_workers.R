@@ -18,9 +18,34 @@ inclusion <- readRDS("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Bases_for_s
   filter(Origin != "V5_inclusion") |>
   select(participant_id, codbar, serocov_work, serocov_pop, sp2_novdec_2020, sp3_juin_2021, sp4_avril_2022, pop_pilote)
 
+## Work ####
+### Sector index ####
+work_dict_sector <- read_xlsx("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Base_de_données/classification_jobs_anup_jan_2024/Data_dict_WORK_final_anonym.xlsx", 
+                              sheet = "Feuil4", skip = 1) |> 
+  mutate(sect_activite = row_number()) |> select(-`Participating institutions/facilities`) |> 
+  add_row(Sector = "Other", Description = "Other", sect_activite = 99) # Add row of other
+### Work dataset ####
+work <- read_csv("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Base_de_données/classification_jobs_anup_jan_2024/SEROCoV-WORK_WP1_database_metiers_mzab4anup_2024.03.07.csv"
+                 , locale = readr::locale(encoding = "latin1") # uncomment in case accents don't appear normally
+)|> 
+  mutate(codbar = as.character(clean_main_codbar)) |>  # update codbar from clean codbar provided by Julien
+  select(codbar, Secteur_group, poste_final, sect_activite) |> 
+  left_join(work_dict_sector) |> select(-Description) |> 
+  mutate(
+    sector_self_reported.work = case_when(
+      !is.na(Sector) ~ TRUE,
+      .default = FALSE),
+    job_sector.work = case_when(
+      sector_self_reported.work ~ Sector,
+      .default = Secteur_group
+    )
+  )
+
 ## Sante-travail 2022 ####
-st_22 <- readRDS("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Bases_for_sharing/2023-09-21-1145_SanteTravail_ALLparticipants.rds") |> select(participant_id, job_sector) |> 
-  rename(job_sector.st_22 = job_sector)
+st_22 <- readRDS("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Bases_for_sharing/2023-09-21-1145_SanteTravail_ALLparticipants.rds") |> 
+  select(participant_id, job_sector) |> 
+  rename(job_sector.st_22 = job_sector) |> 
+  mutate(sector_self_reported.st_22 = TRUE)
 
 ## Sante-travail 2023 ####
 st_23 <- readRDS("P:/ODS/DMCPRU/UEPDATA/Pour_user/Pour_Anshu/santé_travail_11_2023-202401221247.rds")|> # preliminary version from Sergeui
@@ -42,7 +67,9 @@ sector_st_23 <- sector_st_23 |>
          job_sector = str_replace(job_sector, "99","Other")
   )
 st_23 <- left_join(st_23, sector_st_23) |> 
-  select(participant_id, job_sector) |> rename(job_sector.st_23 = job_sector)
+  select(participant_id, job_sector) |> rename(job_sector.st_23 = job_sector) |> 
+  mutate(sector_self_reported.st_23 = TRUE)
+
 rm(sector_st_23, wc)
 
 # Key occupations indices from ILO paper (Berg et al., 2023) ####
@@ -56,6 +83,7 @@ merged <- left_join(occup_final_cleaned, key_occupations, by = join_by("isco_2" 
   left_join(HCW, by = join_by("isco_full" == "ISCO")) |> 
   # Merge with inclusion for serocov_work variable
   left_join(inclusion) |> # comment out for bus santé
+  left_join(work) |> 
   left_join(st_22) |> 
   left_join(st_23) |> 
   mutate(
@@ -66,24 +94,68 @@ merged <- left_join(occup_final_cleaned, key_occupations, by = join_by("isco_2" 
     health_workers = case_when(is.na(isco_full) ~ NA,
                                HCW == "Yes" ~ TRUE, .default = FALSE),
     job_sector = case_when(
+      source == "Work" ~ job_sector.work,
       source == "st_22" ~ job_sector.st_22,
       source == "st_23" ~ job_sector.st_23,
-      .default = NA
-    )
+      .default = NA),
+    sector_self_reported = case_when(
+      source == "Work" ~ sector_self_reported.work,
+      source == "st_22" ~ sector_self_reported.st_22,
+      source == "st_23" ~ sector_self_reported.st_23,
+      .default = NA)
   ) |> 
   # filter(isco_full != -999) |> # remove unclassified people
   select(-c(HCW, label, occupational_grouping, Name_fr, job_sector.st_22, job_sector.st_23)) |>
-  relocate(codbar, .after = participant_id)
+  relocate(codbar, .after = participant_id) |> 
   # Bus santé dataset-specific
   # mutate(Code = str_split_i(participant_id, "_", 1)) |> relocate(Code, .after = participant_id)
   
+  # Harmonize the job sectors across WORK and the Santé Travail questionnaires
+  # ?? where should I put these :
+  # ?? Agroalimentaire --> Commerce
+  # ?? Entreprises privées --> Other
+  # ?? Food industry --> ??
+  mutate(
+    job_sector_harmonized = case_when(
+      job_sector %in% c("health_social", "health_social ; public_admin", "Action social",
+                        "EMS", "Pharmacie", "Santé", "Healthcare",
+                        "Nursing homes", "Social work", "Pharmacy") ~ "Santé, social, médico-social",
+      job_sector %in% c("public_admin", "Administration publique", "Public administration") ~ "Administration publique",
+      job_sector %in% c("education_research", "public_admin ; education_research") ~ "Enseignement, recherche",
+      job_sector %in% c("banking_insurance", "Activité financière", "Financial services") ~ "Banques, assurances",
+      job_sector %in% c("Other", "Entreprises privées", "Food industry") ~ "Autre",
+      job_sector %in% c("security", "Securité publique", "Public security") ~ "Sécurité, secours (police, gendarmerie, pompiers, ambulances)",
+      job_sector %in% c("legal_accounting", "legal_accounting ; public_admin") ~ "Activités juridiques, comptabilité, secrétariat",
+      job_sector %in% c("transportation", "Transport", "Transportation") ~ "Secteur des transports et de l’entreposage",
+      job_sector %in% c("commerce") ~ "Commerce",
+      job_sector %in% c("manufacturing") ~ "Secteur de l’industrie, de la fabrication de biens (aliments, machines ou d’autres articles)",
+      job_sector %in% c("embassy", "Organisation internationale", "International organizations") ~ "Ambassade, organisation internationale",
+      job_sector %in% c("it_comms", "Media") ~ "Information et communication (publicité, marketing, journalisme, réseaux sociaux)",
+      job_sector %in% c("childcare", "Crèche", "Early childhood education") ~ "Petite enfance (maman de jour, éducateur-trice de jeunes enfants, etc.)",
+      job_sector %in% c("r_and_d") ~ "Bureaux d’études, recherche et développement (R&D), architecture",
+      job_sector %in% c("art_library") ~ "Arts, spectacle, musée, bibliothèque",
+      job_sector %in% c("real_estate") ~ "Immobilier, agences (location, voyages, placement)",
+      job_sector %in% c("construction", "Construction") ~ "Secteur de la construction ou de la rénovation (métiers du bâtiment, peinture, génie civil, etc.)",
+      job_sector %in% c("agriculture", "Agriculture") ~ "Secteur de l’agriculture, sylviculture, horticulture, entretien des espaces verts, élevage, pêche, etc.",
+      job_sector %in% c("consulting") ~ "Services de conseils (conseil en gestion de patrimoine, coaching, etc.)",
+      job_sector %in% c("utilities") ~ "Secteur de la production ou de la distribution (électricité, gaz, air conditionné, eau, gestion des déchets, etc.)",
+      job_sector %in% c("accomodation_food") ~ "Hébergement et restauration",
+      job_sector %in% c("domestic", "Soins à domicile", "Homecare") ~ "Services domestiques (aide-ménagère, aide à domicile)",
+      job_sector %in% c("extraction") ~ "Secteur de l’extraction de matières premières (houille, sel, etc.)",
+      job_sector %in% c("personal_service") ~ "Services à la personne (coiffeur-se, esthéticien-ne, etc.)",
+      source %in% c("st_23", "Work") & !is.na(job_sector) ~ "Autre",
+      .default = job_sector
+    )) |> 
+  relocate(job_sector_harmonized, .after = job_sector) |> 
+  select(-c(Secteur_group, poste_final, contains("sector_self_reported."), job_sector.work))
+
 
 # Save dataset ####
 ## Local ####
 # RDS
 saveRDS(merged, file = here("output", "ISCO_fuzzy_recoded_occupations.rds"))
 saveRDS(merged, file = here("output", paste0(format(Sys.time(), "%Y-%m-%d-%H%M_"),
-                                            "ISCO_fuzzy_recoded_occupations.rds")))
+                                             "ISCO_fuzzy_recoded_occupations.rds")))
 
 # ## In the Share drive ####
 # # RDS
