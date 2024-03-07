@@ -166,18 +166,29 @@ work_dict_sector <- read_xlsx("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Ba
   add_row(Sector = "Other", Description = "Other", sect_activite = 99) # Add row of other
   
 ### Dataset ####
-work <- read_csv("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Base_de_données/classification_jobs_anup_jan_2024/SEROCoV-WORK_WP1_database_metiers_mzab4anup_matched_20240202.csv"
-                 # , locale = readr::locale(encoding = "latin1") # uncomment in case accents don't appear normally
-                 ) |> 
+# New file
+work <- read_csv("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Base_de_données/classification_jobs_anup_jan_2024/SEROCoV-WORK_WP1_database_metiers_mzab4anup_2024.03.07.csv"
+                   , locale = readr::locale(encoding = "latin1") # uncomment in case accents don't appear normally
+                   )|> 
   mutate(
     date_soumission = as_date(mdy(date_du_rdv)),
-    Hug_Date_Derniere_Soumission_C = as_date(Hug_Date_Derniere_Soumission_C),
-    codbar = as.character(clean_main_codbar), # update codbar from clean codbar provided by Julien
-    poste = case_when(is.na(poste_2) ~ poste_v2, .default = poste_2)
-    ) |> 
-  left_join(work_dict_poste) |> 
-  left_join(work_dict_sector) |> 
-  arrange(profession)
+    codbar = as.character(clean_main_codbar) # update codbar from clean codbar provided by Julien
+  ) |> 
+  arrange(profession) #|> left_join(work_dict_sector)
+
+# Old file
+# work <- read_csv("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Base_de_données/classification_jobs_anup_jan_2024/SEROCoV-WORK_WP1_database_metiers_mzab4anup_matched_20240202.csv"
+#                  # , locale = readr::locale(encoding = "latin1") # uncomment in case accents don't appear normally
+#                  ) |> 
+#   mutate(
+#     date_soumission = as_date(mdy(date_du_rdv)),
+#     Hug_Date_Derniere_Soumission_C = as_date(Hug_Date_Derniere_Soumission_C),
+#     codbar = as.character(clean_main_codbar), # update codbar from clean codbar provided by Julien
+#     poste = case_when(is.na(poste_2) ~ poste_v2, .default = poste_2)
+#     ) |> 
+#   left_join(work_dict_poste) |> 
+#   left_join(work_dict_sector) |> 
+#   arrange(profession)
 
 rm(work_dict_poste, work_dict_sector) # remove these intermediate files
 
