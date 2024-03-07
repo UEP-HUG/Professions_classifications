@@ -704,7 +704,7 @@ occup_final_cleaned <- occup_final |>
       "aucun", "aucune", "en activite", "pas d'activite non salariee","elle a 5 ans - pas pertinent!",
       "en formation", "en formation (enseignement)", "rechercheuse, couramment sans emploi",
       "bachelor epfl architecture, actuellement en stage obligatoire", "retraite", "avs", "retraite depuis longtemps (telexiste)",
-      "retraite hyper actif", "retraite mais j etais dans la finance", "retraitee", "rien",
+      "retraite hyper actif", "retraite mais j etais dans la finance", "retraitee", "rien", "chomage", "sans profession",
       "etudiant", "etudiant...", "etudiante",
       "etudiante en medecine", "etudiante, stage en traduction", "je suis etudiante", "pc / etudiant medecine",
       "pas repondu", "je n'ai pas ce type d'activites (bug dans le questionnaire)", "je n'ai pas de conjoint",
