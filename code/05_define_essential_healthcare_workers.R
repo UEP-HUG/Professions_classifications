@@ -147,15 +147,15 @@ merged <- left_join(occup_final_cleaned, key_occupations, by = join_by("isco_2" 
       .default = job_sector
     )) |> 
   relocate(job_sector_harmonized, .after = job_sector) |> 
-  select(-c(Secteur_group, poste_final, contains("sector_self_reported."), job_sector.work))
+  select(-c(Secteur_group, poste_final, contains("sector_self_reported."), job_sector.work, sect_activite, Sector))
 
 
 # Save dataset ####
 ## Local ####
 # RDS
 saveRDS(merged, file = here("output", "ISCO_fuzzy_recoded_occupations.rds"))
-saveRDS(merged, file = here("output", paste0(format(Sys.time(), "%Y-%m-%d-%H%M_"),
-                                             "ISCO_fuzzy_recoded_occupations.rds")))
+# saveRDS(merged, file = here("output", paste0(format(Sys.time(), "%Y-%m-%d-%H%M_"),
+#                                              "ISCO_fuzzy_recoded_occupations.rds")))
 
 # ## In the Share drive ####
 # # RDS
