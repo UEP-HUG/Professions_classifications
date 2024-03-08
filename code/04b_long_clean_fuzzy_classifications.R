@@ -44,7 +44,7 @@ occup_final_cleaned <- occup_final |>
     master_profession_original %in% c("fonctionnaire, chef d'unite 240 personnes sous mes ordres.") ~ 1000,
     ### Chief executives, senior officials and legislators ####
     #### Legislators and senior officials ####
-    master_profession_original %in% c("cadre relations internationales") ~ 111,
+    master_profession_original %in% c("cadre relations internationales", "politicien", "politicienne", "politicienne a plein temps") ~ 111,
     ##### Senior government officials ####
     master_profession_original %in% c(
       "cheffe etat ge (ne souhaite pas preciser quel service)", "che service dip etat de geneve", 
@@ -468,7 +468,8 @@ occup_final_cleaned <- occup_final |>
     master_profession_original %in% c("ajointe au service social et communautaire d'une commune") ~ 3353,
     master_profession_original %in% c("agent de surete specialiste", "chef d'equipe surete", "officier de securite", "coordinatrice securite",
                                       "responsable surete", "cadre superieur policier", "agente de surete specialiste aeroportuaire",
-                                      "sergent chef d'equipe a la police municipale", "analyste criminelle", "chef de la securite ferroviaire") ~ 3355,
+                                      "sergent chef d'equipe a la police municipale", "analyste criminelle", 
+                                      "chef de la securite ferroviaire") ~ 3355,
     ### Legal, social, cultural and related associate professionals ####
     
     #### Legal, social and religious associate professionals ####
@@ -592,7 +593,9 @@ occup_final_cleaned <- occup_final |>
     master_profession_original %in% c("") ~ 541,
     master_profession_original %in% c("etudiante/pompier volontaire", "orpc seymaz", "protection civile seymaz", 
                                       "astreint protection civile", "pompier chef de service") ~ 5411,
-    master_profession_original %in% c("appointee de gendarmerie", "policier chef des operations de la police") ~ 5412,
+    master_profession_original %in% c("appointee de gendarmerie", "policier chef des operations de la police",
+                                      "police geneve", "policier municipal", "policier municipale",
+                                      "policiere - cheffe de service", "policiere municipale") ~ 5412,
     master_profession_original %in% c("assistante chargee de securite", "securite", "securite accueil",
                                       "sergent securite onug", "coordonnateur securite", "security duty manager",
                                       "conductrice de chiens de detection/ cheffe d'equipe", "gardien d'eglise") ~ 5414,
@@ -718,11 +721,14 @@ occup_final_cleaned <- occup_final |>
       "sans emploi de longue duree, hors chomage", "un seul emplois salarie", "civiliste", "en conge parental",
       "30% par annee", "0", "1", "1 seule activite", "120000", "actuellement j'ai une activite salariee",
       "actuelle", "-", "--", "---", ".", "///", "::::", "?", "...", "0", "120000", "30% par année",
+      "n.a.", "na", "ne souhaite pas repondre", "non applicabel", "non, j'ai une activite salariee","pas autre",
+      "pas concerne", "pas d'activite", "pas d'activite independante, seulement salarie", "pas d'activite suplementaire",
+      "pas d'aittes avtivites", "pas d'autres activites", "pas de travail",
       
       # Military
       "specialiste en desamorcage"
     ) |
-      str_detect(master_profession_original, "etudiante a l'universite|the above categories do not correspond to this, as i need") ~ -999,
+      str_detect(master_profession_original, "etudiante a l'universite|the above categories do not correspond to this, as i need|pas de plusieurs activite mais le questionnaire ne reconnait pas mon") ~ -999,
     
     .default = NA
   )) |>
