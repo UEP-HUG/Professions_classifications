@@ -74,7 +74,7 @@ occup_final_cleaned <- occup_final |>
                                       "chef de team", "gestionnaire (travail de bureau)", "sre suppleant du responsable equipe",
                                       "suppleante responsable", "suppleante responsable d'equipe", "suppleante responsable equipe",
                                       "responsable d'une equipe de conseillers / experts", "chef d'unite", "chef d'unite adjoint",
-                                      "agent d'exploitation responsable d'equipe", "agent responsable d'equipe", "gestion equipe") ~ 121,
+                                      "agent d'exploitation responsable d'equipe", "agent responsable d'equipe", "gestion equipe", "responsable dequipe") ~ 121,
     ##### Finance managers ####
     master_profession_original %in% c("chef de service service financier", "cfo", "finance manager",
                                       "gestionnaire des risques financiers", "gerant de fonds de placement",
@@ -92,7 +92,7 @@ occup_final_cleaned <- occup_final |>
                                       "global account director", "responsable du secretariat general (banque)") ~ 1219,
     
     #### Sales, marketing and development managers ####
-    master_profession_original %in% c("cadre salarie et marchand independant", "commercial manager", "head of e-commerce") ~ 122,
+    master_profession_original %in% c("cadre salarie et marchand independant", "commercial manager", "head of e-commerce", "responsable commercial") ~ 122,
     master_profession_original %in% c("responsable de laboratoire") ~ 1223,
     ### Production and specialized services managers ####
     #### Production managers in agriculture, forestry and fisheries ####
@@ -291,7 +291,7 @@ occup_final_cleaned <- occup_final |>
       "bancaire", "gestionnaire assurance", "finance business partner (soutien financier aux programmes)",
       "responsable grands comptes") ~ 241,
     master_profession_original %in% c("analyste en conformite", "assistante audit", "compliance manager", "chef de l'audit interne", "anaylste senior conformite",
-                                      "auditrice interne", "auditeur interne") ~ 2411,
+                                      "auditrice interne", "auditeur interne", "responsable compliance") ~ 2411,
     master_profession_original %in% c("independant - financial management services", "gestionnaire de patrimoine", "assistane de gestion de fortune", "gestion patrimoniale") ~ 2412,
     master_profession_original %in% c("gestionnaire de fortune - middel office", "risl manager, membre de conseil d'administration, enseignante",
                                       "responsable des risques et de la conformite", "responsable risques", "gestionnaire de risques",
@@ -306,7 +306,7 @@ occup_final_cleaned <- occup_final |>
     master_profession_original %in% c("specialiste en recrutement", "specialiste senior en recrutement", "chargee de formation specialiste rh") ~ 2423,
     
     master_profession_original %in% c("senior business lead") ~ 243,
-    master_profession_original %in% c("mediamanager actu rts") ~ 2431,
+    master_profession_original %in% c("mediamanager actu rts", "crm market rollout lead") ~ 2431,
     master_profession_original %in% c("consultante en communication, cheffe d'entreprise") ~ 2432,
     master_profession_original %in% c("recherche de fonds") ~ 24323,
     master_profession_original %in% c("technicien de support", "ressources support specialist") ~ 24331,
@@ -338,7 +338,7 @@ occup_final_cleaned <- occup_final |>
                                       "juriste-documentaliste (& enseignant a 30%)", "assitant bibliothaire") ~ 262,
     #### Social and religious professionals ####
     master_profession_original %in% c("") ~ 263,
-    master_profession_original %in% c("analyste commerciale") ~ 2631,
+    master_profession_original %in% c("analyste commercialeé") ~ 2631,
     master_profession_original %in% c("historienne de l'art, redactrice a 50% salariee et 40 a 50 & independant") ~ 2633,
     ##### Psychologists ####
     master_profession_original %in% c(
@@ -526,6 +526,7 @@ occup_final_cleaned <- occup_final |>
     master_profession_original %in% c("") ~ 413,
     ### Customer services clerks ####
     master_profession_original %in% c("") ~ 421,
+    master_profession_original %in% c("emploi. de banque cambiste") ~ 4211,
     master_profession_original %in% c("") ~ 422,
     master_profession_original %in% c("gestion de projets en agence de voyage") ~ 4221,
     master_profession_original %in% c("job d'etudiante, receptionniste pour un apparthotel") ~ 4224,
@@ -591,7 +592,7 @@ occup_final_cleaned <- occup_final |>
     
     ### Protective services workers ####8
     master_profession_original %in% c("") ~ 541,
-    master_profession_original %in% c("etudiante/pompier volontaire", "orpc seymaz", "protection civile seymaz", 
+    master_profession_original %in% c("etudiante/pompier volontaire", "orpc seymaz", "protection civile seymaz", "protection civile",
                                       "astreint protection civile", "pompier chef de service") ~ 5411,
     master_profession_original %in% c("appointee de gendarmerie", "policier chef des operations de la police",
                                       "police geneve", "policier municipal", "policier municipale",
@@ -718,15 +719,15 @@ occup_final_cleaned <- occup_final |>
       "independante et profession de formation intermediaire", "independante, profession non-manuelle, formation superieure",
       "recherche d'emploi, derniere profession independantes", "migros jusqu a 4 septembre puis recherche d emploi",
       "dernier emploi, chaperon rouge croix rouge genevoise", "en emploi", "je travaille a 100 % dans un seul emploi",
-      "sans emploi de longue duree, hors chomage", "un seul emplois salarie", "civiliste", "en conge parental",
+      "sans emploi de longue duree, hors chomage", "un seul emplois salarie", "civiliste", "service civil", "en conge parental",
       "30% par annee", "0", "1", "1 seule activite", "120000", "actuellement j'ai une activite salariee",
       "actuelle", "-", "--", "---", ".", "///", "::::", "?", "...", "0", "120000", "30% par année",
       "n.a.", "na", "ne souhaite pas repondre", "non applicabel", "non, j'ai une activite salariee","pas autre",
       "pas concerne", "pas d'activite", "pas d'activite independante, seulement salarie", "pas d'activite suplementaire",
-      "pas d'aittes avtivites", "pas d'autres activites", "pas de travail",
+      "pas d'aittes avtivites", "pas d'autres activites", "pas de travail", "je suis que salarie"
       
       # Military
-      "specialiste en desamorcage"
+      , "specialiste en desamorcage"
     ) |
       str_detect(master_profession_original, "etudiante a l'universite|the above categories do not correspond to this, as i need|pas de plusieurs activite mais le questionnaire ne reconnait pas mon") ~ -999,
     
