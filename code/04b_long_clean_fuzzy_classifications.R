@@ -724,7 +724,7 @@ occup_final_cleaned <- occup_final |>
       "actuelle", "-", "--", "---", ".", "///", "::::", "?", "...", "0", "120000", "30% par année",
       "n.a.", "na", "ne souhaite pas repondre", "non applicabel", "non, j'ai une activite salariee","pas autre",
       "pas concerne", "pas d'activite", "pas d'activite independante, seulement salarie", "pas d'activite suplementaire",
-      "pas d'aittes avtivites", "pas d'autres activites", "pas de travail", "je suis que salarie"
+      "pas d'aittes avtivites", "pas d'autres activites", "pas de travail", "je suis que salarie", "non"
       
       # Military
       , "specialiste en desamorcage"
