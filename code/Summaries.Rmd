@@ -1,0 +1,545 @@
+---
+title: "Professions classification summaries"
+author: "Anshu Uppal"
+date: "`r lubridate::today()`"
+output: 
+  html_document:
+    code_folding: hide
+knit: (function(input, ...) {
+    rmarkdown::render(
+      input, 
+      output_dir = here::here("output")
+    )
+  })
+---
+
+```{r setup, results = "hide", message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)  # Set default to not display code from chunks and not to display warnings
+options(width = 300)
+# Load packages and dataset ####
+pacman::p_load(    # Installs / loads packages if they are not already installed / loaded
+  here,       # File locator
+  tidyverse,
+  flextable
+)
+
+# Input dataset
+# Read in datasets ####
+merged <- readRDS("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Base_de_données/classification_jobs_anup_jan_2024/2024-02-29-1553_ISCO_fuzzy_recoded_occupations.rds")
+merged <- readRDS(here("output", "ISCO_fuzzy_recoded_occupations.rds"))
+
+# Reorder ISCO labels as factors
+merged <- merged |> 
+  mutate(
+    ISCO_label_full = fct_reorder(ISCO_label_full, isco_full),
+    ISCO_label_3 = fct_reorder(ISCO_label_3, isco_3),
+    ISCO_label_2 = fct_reorder(ISCO_label_2, isco_2),
+    ISCO_label_1 = fct_reorder(ISCO_label_1, isco_1),
+    # ISCO codes
+    # isco_1 = factor(isco_1),
+    # isco_2 = factor(isco_2),
+    # isco_3 = factor(isco_3),
+    # isco_full = factor(isco_full)
+  )
+
+# Sante-travail 2022
+st_22 <- readRDS("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Bases_for_sharing/2023-09-21-1145_SanteTravail_ALLparticipants.rds") |> select(participant_id, job_sector)
+
+# Sante-travail 2023
+st_23 <- readRDS("P:/ODS/DMCPRU/UEPDATA/Pour_user/Pour_Anshu/santé_travail_11_2023-202401221247.rds")|> # preliminary version from Sergeui
+  group_by(participant_id) |> filter(n() < 2) |> ungroup()  # remove duplicate entries
+
+sector_st_23 <- st_23 |> select(participant_id, starts_with("job_sector")) |> 
+  select(-job_sector_other_text) |>
+  mutate(
+    across(
+      # job_sector_commerce:job_sector_99,
+      starts_with("job_sector"),
+      ~na_if(., FALSE)
+    ))
+wc <- droplevels(col(sector_st_23, as.factor=TRUE)[which(sector_st_23 == "TRUE")])
+sector_st_23[levels(wc)] <- Map(factor, sector_st_23[levels(wc)], labels = levels(wc))
+sector_st_23 <- sector_st_23 |> 
+  unite("job_sector", job_sector_commerce:job_sector_99, na.rm = TRUE, sep = " ; ") |> 
+  mutate(job_sector = str_replace_all(job_sector, "job_sector_",""),
+         job_sector = str_replace(job_sector, "99","Other")
+  )
+st_23 <- left_join(st_23, sector_st_23) |> 
+  select(participant_id, job_sector)
+rm(sector_st_23, wc)
+
+
+# Define function for flextable
+# define standard myflextable function 
+myflextable = function(data, ...) {
+  set_flextable_defaults(na_str = "NA", theme_fun = theme_booktabs, font.size = 12, padding.bottom = 1, padding.top = 1)
+  x = flextable(data, ...)
+  x = colformat_int(x, big.mark = "")
+  x = colformat_double(x, big.mark = "", 
+                       digits = 2,
+                       na_str = "NA")
+  return(x)
+}
+```
+# Profession summaries {.tabset}
+```{r}
+# Occupation summaries ####
+summary_overall <- merged |> 
+  summarise(N = n(),
+            HCW_n = sum(health_workers, na.rm = TRUE),
+            HCW_percent = paste0(round(HCW_n / N, 3)*100, "%")
+  ) |> 
+  mutate(ISCO_label = "Overall", ISCO = "-") |> 
+  relocate(c(ISCO_label, ISCO), .before = N)
+
+summary_overall_pop <- merged |> 
+  filter(serocov_pop | sp2_novdec_2020 | sp3_juin_2021 | sp4_avril_2022) |> 
+  summarise(N = n(),
+            HCW_n = sum(health_workers, na.rm = TRUE),
+            HCW_percent = paste0(round(HCW_n / N, 3)*100, "%")
+  ) |> 
+  mutate(ISCO_label = "Overall", ISCO = "-") |> 
+  relocate(c(ISCO_label, ISCO), .before = N)
+
+# Level 1
+summary_level_1 <- merged |> 
+  group_by(ISCO_label_1, isco_1) |> 
+  # count(ISCO_label_1, isco_1,health_workers)
+  summarise(N = n(),
+            HCW_n = sum(health_workers, na.rm = TRUE),
+            HCW_percent = paste0(round(HCW_n / N, 3)*100, "%")
+  ) |> 
+  rename(ISCO_label = ISCO_label_1, ISCO = isco_1) |> 
+  mutate(ISCO = as.integer(ISCO)) |> 
+  arrange(ISCO)
+
+summary_level_1_pop <- merged |> 
+  filter(serocov_pop | sp2_novdec_2020 | sp3_juin_2021 | sp4_avril_2022) |> 
+  group_by(ISCO_label_1, isco_1) |> 
+  # count(ISCO_label_1, isco_1,health_workers)
+  summarise(N = n(),
+            HCW_n = sum(health_workers, na.rm = TRUE),
+            HCW_percent = paste0(round(HCW_n / N, 3)*100, "%")
+  ) |> 
+  rename(ISCO_label = ISCO_label_1, ISCO = isco_1) |> 
+  mutate(ISCO = as.integer(ISCO)) |> 
+  arrange(ISCO)
+
+# Level 2
+summary_level_2 <- merged |> 
+  group_by(ISCO_label_2, isco_2) |> 
+  # count(ISCO_label_1, isco_1,health_workers)
+  summarise(N = n(),
+            HCW_n = sum(health_workers, na.rm = TRUE),
+            HCW_percent = paste0(round(HCW_n / N, 3)*100, "%")
+  ) |> 
+  rename(ISCO_label = ISCO_label_2, ISCO = isco_2) |> 
+  mutate(ISCO = as.integer(ISCO)) |> 
+  arrange(ISCO)
+
+summary_level_2_pop <- merged |> 
+  filter(serocov_pop | sp2_novdec_2020 | sp3_juin_2021 | sp4_avril_2022) |> 
+  group_by(ISCO_label_2, isco_2) |> 
+  # count(ISCO_label_1, isco_1,health_workers)
+  summarise(N = n(),
+            HCW_n = sum(health_workers, na.rm = TRUE),
+            HCW_percent = paste0(round(HCW_n / N, 3)*100, "%")
+  ) |> 
+  rename(ISCO_label = ISCO_label_2, ISCO = isco_2) |> 
+  mutate(ISCO = as.integer(ISCO)) |> 
+  arrange(ISCO)
+
+# Level 3
+summary_level_3 <- merged |> 
+  group_by(ISCO_label_3, isco_3) |> 
+  summarise(N = n(),
+            HCW_n = sum(health_workers, na.rm = TRUE),
+            HCW_percent = paste0(round(HCW_n / N, 3)*100, "%")
+  ) |> 
+  rename(ISCO_label = ISCO_label_3, ISCO = isco_3) |> 
+  mutate(ISCO = as.integer(ISCO)) |> 
+  arrange(ISCO)
+
+summary_level_3_pop <- merged |> 
+  filter(serocov_pop | sp2_novdec_2020 | sp3_juin_2021 | sp4_avril_2022) |> 
+  group_by(ISCO_label_3, isco_3) |> 
+  # count(ISCO_label_1, isco_1,health_workers)
+  summarise(N = n(),
+            HCW_n = sum(health_workers, na.rm = TRUE),
+            HCW_percent = paste0(round(HCW_n / N, 3)*100, "%")
+  ) |> 
+  rename(ISCO_label = ISCO_label_3, ISCO = isco_3) |> 
+  mutate(ISCO = as.integer(ISCO)) |> 
+  arrange(ISCO)
+```
+
+## ISCO summaries {.tabset}  
+Below are a few summaries, where N is the number of participants in each grouping, HCW_n is the number of healthcare workers in each grouping, and HCW_percent is the percentage of healthcare workers in each grouping (= HCW_n  / N). Note: N can include multiple entries for a single participant, if they replied to more than one of the questionnaires considered here (WORK, Inclusion-KIDS, and Santé-Travail 2022/2023).  
+
+NA are those not yet classified, and “Recoding impossible” are people who submitted non-answers, e.g. “---”, or answers that don’t correspond to ISCO classifications, e.g. “étudiant” or “mere au foyer”.  
+
+### ISCO level 1
+**By the most general ISCO grouping (“Major groups”)**
+```{r}
+summary_1 <- rbind(summary_overall, summary_level_1) 
+summary_1 |> myflextable() |> 
+  width(j = 1, 3.8, unit = "in") |> 
+  bold(i = 1)
+```
+
+The same as above but keeping only participants recruited from one of the respresentative serosurveys (SP1, SP2, SP3, SP4):
+```{r}
+summary_1_pop <- rbind(summary_overall_pop, summary_level_1_pop) 
+summary_1_pop |> myflextable() |> 
+  width(j = 1, 3.8, unit = "in") |> 
+  bold(i = 1)
+```
+
+### ISCO level 2
+**By the level 2 ISCO grouping:**
+```{r}
+summary_2 <- rbind(summary_overall, summary_level_2) 
+summary_2 |> myflextable() |> 
+  width(j = 1, 3.8, unit = "in") |> 
+  bold(i = 1)
+```
+The same as above but keeping only participants recruited from one of the respresentative serosurveys (SP1, SP2, SP3, SP4):
+```{r}
+summary_2_pop <- rbind(summary_overall_pop, summary_level_2_pop) 
+summary_2_pop |> myflextable() |> 
+  width(j = 1, 3.8, unit = "in") |> 
+  bold(i = 1)
+```
+
+### ISCO level 3
+**By the level 3 ISCO grouping:**
+```{r}
+summary_3 <- rbind(summary_overall, summary_level_3) 
+summary_3 |> myflextable() |> 
+  width(j = 1, 3.8, unit = "in") |> 
+  bold(i = 1)
+```
+The same as above but keeping only participants recruited from one of the respresentative serosurveys (SP1, SP2, SP3, SP4):
+```{r}
+summary_3_pop <- rbind(summary_overall_pop, summary_level_3_pop) 
+summary_3_pop |> myflextable() |> 
+  width(j = 1, 3.8, unit = "in") |> 
+  bold(i = 1)
+```
+
+## Job sector summaries {.tabset}
+### Harmonized  
+**Job sector using the "harmonized" variable:**
+We still need to confirm how to define the WORK sectors and also how to define a single job sector for Santé-Travail 2023, where participants could select multiple job sectors.
+```{r}
+summary_sector_overall <- merged |> 
+  summarise(
+    N = n(),
+    HCW_n = sum(health_workers, na.rm = TRUE),
+    HCW_percent = paste0(round(HCW_n / N, 3)*100, "%")
+  ) |> 
+  mutate(job_sector_harmonized = "Overall") |> 
+  relocate(c(job_sector_harmonized), .before = N)
+
+summary_sector <- merged |> 
+  group_by(job_sector_harmonized) |> 
+  summarise(
+    N = n(),
+    HCW_n = sum(health_workers, na.rm = TRUE),
+    HCW_percent = paste0(round(HCW_n / N, 3)*100, "%")
+  )
+
+sector_summary <- rbind(summary_sector_overall, summary_sector)
+sector_summary |> myflextable() |> 
+  width(j = 1, 3.8, unit = "in") |> 
+  bold(i = 1)
+```
+
+### ST 2023 - to check  
+These are the responses for job sector from Santé-Travail 2023. When multiple responses were selected, they are separated by a ";".  
+
+For the "harmonized" job sectors, I recoded these three of the multicombinations as follows:  
+"health_social ; public_admin" --> "Santé, social, médico-social"  
+"legal_accounting ; public_admin" --> "Enseignement, recherche"  
+"public_admin ; education_research" --> "Activités juridiques, comptabilité, secrétariat"
+
+I then recoded all of the other multicombinations as "Other".
+
+The numbers in these other multicombinations are relatively low, but still worth some discussion to see how to treat them.
+```{r}
+# Job sector summaries: st_23 ####
+merged_st_23 <- left_join(merged, st_23) |>   filter(!is.na(job_sector) & source == "st_23")
+merged_st_23_overall <- merged_st_23 |> 
+  summarise(N = n(),
+            HCW_n = sum(health_workers, na.rm = TRUE),
+            HCW_percent = paste0(round(HCW_n / N, 3)*100, "%")
+  ) |> 
+  mutate(job_sector = "Overall") |> 
+  relocate(job_sector, .before = N)
+
+merged_st_23 <- merged_st_23 |> 
+  mutate(
+    job_sector_lumped = job_sector,
+    job_sector_lumped = forcats::fct_lump_min(job_sector_lumped,1,other_level = "Other")
+    ) |> 
+  group_by(job_sector_lumped) |> 
+  summarize(N = n(),
+            HCW_n = sum(health_workers, na.rm = TRUE),
+            HCW_percent = paste0(round(HCW_n / N, 3)*100, "%")) |> 
+  rename(job_sector = job_sector_lumped) |> 
+  arrange(-N)
+
+st23_sectors <- rbind(merged_st_23_overall, merged_st_23) 
+# c("health_social ; public_admin", "legal_accounting ; public_admin", "public_admin ; education_research")
+sec_rows <-which(st23_sectors$job_sector %in% c("health_social ; public_admin", "legal_accounting ; public_admin", "public_admin ; education_research"))
+st23_sectors |> 
+  myflextable() |> 
+  width(j = 1, 4, unit = "in") |> 
+  bold(i = sec_rows)
+```
+
+## Consistency {.tabset}
+### ISCO codes {.tabset}
+Check consistency in the ISCO codes when we have data from two timepoints.  
+
+The label in the left column is the profession in the indicated dataset, n_pairs shows the number of instances where that profession has matching data for the same participant data at the other timepoint.
+
+the consistent column shows how many of those pairs of data show identical professions (i.e. profession remained consistent between the two timepoints).
+
+percent shows the percentage of consistent matches.
+
+#### Level 1
+```{r}
+consistency_1 <- merged |> 
+  filter(isco_full != -999) |> 
+  group_by(codbar) |> filter(n()>1) |> 
+  select(codbar, source, ISCO_label_1) |> 
+  pivot_wider(names_from = source,
+              values_from = c(ISCO_label_1)) |> 
+  mutate(
+    st_22_st_23 = case_when(is.na(st_22) | is.na(st_23) ~ NA, st_22 == st_23 ~ TRUE, .default = FALSE),
+    st_22_work = case_when(is.na(st_22) | is.na(Work) ~ NA, st_22 == Work ~ TRUE, .default = FALSE),
+    st_22_inc_kids = case_when(is.na(st_22) | is.na(inc_kids) ~ NA, st_22 == inc_kids ~ TRUE, .default = FALSE),
+    st_23_work = case_when(is.na(st_23) | is.na(Work) ~ NA, st_23 == Work ~ TRUE, .default = FALSE),
+    st_23_inc_kids = case_when(is.na(st_23) | is.na(inc_kids) ~ NA, st_23 == inc_kids ~ TRUE, .default = FALSE),
+    work_inc_kids = case_when(is.na(Work) | is.na(inc_kids) ~ NA, Work == inc_kids ~ TRUE, .default = FALSE)
+    )
+```
+
+**Consistency between Santé-Travail 2022 and 2023**
+```{r}
+consistency_1_st <- consistency_1 |> 
+  group_by(st_22) |> 
+  summarise(
+    n_pairs = sum(!is.na(st_22_st_23)),
+    consistent = sum(st_22_st_23, na.rm = TRUE),
+    percent = paste0(round(consistent / n_pairs, 2)*100, "%")
+  ) |> 
+  filter(!is.na(st_22))
+consistency_1_st |> myflextable() |> 
+    width(j = 1, 3.8, unit = "in")
+```
+
+**Consistency between Santé-Travail 2022 and WORK**
+```{r}
+consistency_1_st22_work <- consistency_1 |> 
+  group_by(st_22) |> 
+  summarise(
+    n_pairs = sum(!is.na(st_22_work)),
+    consistent = sum(st_22_work, na.rm = TRUE),
+    percent = paste0(round(consistent / n_pairs, 2)*100, "%")
+  ) |> 
+  filter(!is.na(st_22))
+consistency_1_st22_work |> myflextable() |> 
+    width(j = 1, 3.8, unit = "in")
+```
+
+**Consistency between Santé-Travail 2023 and WORK**
+```{r}
+consistency_1_st23_work <- consistency_1 |> 
+  group_by(st_23) |> 
+  summarise(
+    n_pairs = sum(!is.na(st_23_work)),
+    consistent = sum(st_23_work, na.rm = TRUE),
+    percent = paste0(round(consistent / n_pairs, 2)*100, "%")
+  ) |> 
+  filter(!is.na(st_23))
+consistency_1_st23_work |> myflextable() |> 
+    width(j = 1, 3.8, unit = "in")
+```
+
+#### Level 2
+```{r}
+consistency_2 <- merged |> 
+  filter(isco_full != -999) |> 
+  group_by(codbar) |> filter(n()>1) |> 
+  select(codbar, source, ISCO_label_2) |> 
+  pivot_wider(names_from = source,
+              values_from = ISCO_label_2) |> 
+  mutate(
+    st_22_st_23 = case_when(is.na(st_22) | is.na(st_23) ~ NA, st_22 == st_23 ~ TRUE, .default = FALSE),
+    st_22_work = case_when(is.na(st_22) | is.na(Work) ~ NA, st_22 == Work ~ TRUE, .default = FALSE),
+    st_22_inc_kids = case_when(is.na(st_22) | is.na(inc_kids) ~ NA, st_22 == inc_kids ~ TRUE, .default = FALSE),
+    st_23_work = case_when(is.na(st_23) | is.na(Work) ~ NA, st_23 == Work ~ TRUE, .default = FALSE),
+    st_23_inc_kids = case_when(is.na(st_23) | is.na(inc_kids) ~ NA, st_23 == inc_kids ~ TRUE, .default = FALSE),
+    work_inc_kids = case_when(is.na(Work) | is.na(inc_kids) ~ NA, Work == inc_kids ~ TRUE, .default = FALSE)
+    )
+```
+
+**Consistency between Santé-Travail 2022 and 2023**
+```{r}
+consistency_2_st <- consistency_2 |> 
+  group_by(st_22) |> 
+  summarise(
+    n_pairs = sum(!is.na(st_22_st_23)),
+    consistent = sum(st_22_st_23, na.rm = TRUE),
+    percent = paste0(round(consistent / n_pairs, 2)*100, "%")
+  ) |> 
+  filter(!is.na(st_22))
+consistency_2_st |> myflextable() |> 
+    width(j = 1, 3.8, unit = "in")
+```
+
+**Consistency between Santé-Travail 2022 and WORK**
+```{r}
+consistency_2_st22_work <- consistency_2 |> 
+  group_by(st_22) |> 
+  summarise(
+    n_pairs = sum(!is.na(st_22_work)),
+    consistent = sum(st_22_work, na.rm = TRUE),
+    percent = paste0(round(consistent / n_pairs, 2)*100, "%")
+  ) |> 
+  filter(!is.na(st_22))
+consistency_2_st22_work |> myflextable() |> 
+    width(j = 1, 3.8, unit = "in")
+```
+
+**Consistency between Santé-Travail 2023 and WORK**
+```{r}
+consistency_2_st23_work <- consistency_2 |> 
+  group_by(st_23) |> 
+  summarise(
+    n_pairs = sum(!is.na(st_23_work)),
+    consistent = sum(st_23_work, na.rm = TRUE),
+    percent = paste0(round(consistent / n_pairs, 2)*100, "%")
+  ) |> 
+  filter(!is.na(st_23))
+consistency_2_st23_work |> myflextable() |> 
+    width(j = 1, 3.8, unit = "in")
+```
+
+#### Level 3
+```{r}
+consistency_3 <- merged |> 
+  filter(isco_full != -999) |> 
+  group_by(codbar) |> filter(n()>1) |> 
+  select(codbar, source, ISCO_label_3) |> 
+  pivot_wider(names_from = source,
+              values_from = ISCO_label_3) |> 
+  mutate(
+    st_22_st_23 = case_when(is.na(st_22) | is.na(st_23) ~ NA, st_22 == st_23 ~ TRUE, .default = FALSE),
+    st_22_work = case_when(is.na(st_22) | is.na(Work) ~ NA, st_22 == Work ~ TRUE, .default = FALSE),
+    st_22_inc_kids = case_when(is.na(st_22) | is.na(inc_kids) ~ NA, st_22 == inc_kids ~ TRUE, .default = FALSE),
+    st_23_work = case_when(is.na(st_23) | is.na(Work) ~ NA, st_23 == Work ~ TRUE, .default = FALSE),
+    st_23_inc_kids = case_when(is.na(st_23) | is.na(inc_kids) ~ NA, st_23 == inc_kids ~ TRUE, .default = FALSE),
+    work_inc_kids = case_when(is.na(Work) | is.na(inc_kids) ~ NA, Work == inc_kids ~ TRUE, .default = FALSE)
+    )
+```
+
+**Consistency between Santé-Travail 2022 and 2023**
+```{r}
+consistency_3_st <- consistency_3 |> 
+  group_by(st_22) |> 
+  summarise(
+    n_pairs = sum(!is.na(st_22_st_23)),
+    consistent = sum(st_22_st_23, na.rm = TRUE),
+    percent = paste0(round(consistent / n_pairs, 2)*100, "%")
+  ) 
+consistency_3_st |> myflextable() |> 
+    width(j = 1, 3.8, unit = "in")
+```
+
+**Consistency between Santé-Travail 2022 and WORK**
+```{r}
+consistency_3_st22_work <- consistency_3 |> 
+  group_by(st_22) |> 
+  summarise(
+    n_pairs = sum(!is.na(st_22_work)),
+    consistent = sum(st_22_work, na.rm = TRUE),
+    percent = paste0(round(consistent / n_pairs, 2)*100, "%")
+  ) 
+consistency_3_st22_work |> myflextable() |> 
+    width(j = 1, 3.8, unit = "in")
+```
+
+**Consistency between Santé-Travail 2023 and WORK**
+```{r}
+consistency_3_st23_work <- consistency_3 |> 
+  group_by(st_23) |> 
+  summarise(
+    n_pairs = sum(!is.na(st_23_work)),
+    consistent = sum(st_23_work, na.rm = TRUE),
+    percent = paste0(round(consistent / n_pairs, 2)*100, "%")
+  ) 
+consistency_3_st23_work |> myflextable() |> 
+    width(j = 1, 3.8, unit = "in")
+```
+
+### Job sectors {.tabset}
+Check consistency in job sector when we have data from two timepoints
+```{r}
+consistency_job_sectors <- merged |> 
+  filter(!is.na(job_sector_harmonized)) |> 
+  group_by(codbar) |> filter(n()>1) |> 
+  select(codbar, source, job_sector_harmonized) |> 
+  pivot_wider(names_from = source,
+              values_from = job_sector_harmonized) |> 
+  ungroup() |> 
+  mutate(
+    st_22_st_23 = case_when(is.na(st_22) | is.na(st_23) ~ NA, st_22 == st_23 ~ TRUE, .default = FALSE),
+    st_22_work = case_when(is.na(st_22) | is.na(Work) ~ NA, st_22 == Work ~ TRUE, .default = FALSE),
+    st_23_work = case_when(is.na(st_23) | is.na(Work) ~ NA, st_23 == Work ~ TRUE, .default = FALSE),
+    )
+```
+
+#### ST 22_23
+**Consistency between Santé-Travail 2022 and 2023**
+```{r}
+consistency_job_sectors_st <- consistency_job_sectors |> 
+  group_by(factor(st_22)) |> 
+  summarise(
+    n_pairs = sum(!is.na(st_22_st_23)),
+    consistent = sum(st_22_st_23, na.rm = TRUE),
+    percent = paste0(round(consistent / n_pairs, 2)*100, "%")
+  ) 
+consistency_job_sectors_st |> myflextable() |> 
+    width(j = 1, 3.8, unit = "in")
+```
+
+#### ST22_Work
+**Consistency between Santé-Travail 2022 and WORK**
+```{r}
+consistency_job_sectors_st22_work <- consistency_job_sectors |> 
+  group_by(factor(st_22)) |> 
+  summarise(
+    n_pairs = sum(!is.na(st_22_work)),
+    consistent = sum(st_22_work, na.rm = TRUE),
+    percent = paste0(round(consistent / n_pairs, 2)*100, "%")
+  ) 
+consistency_job_sectors_st22_work |> myflextable() |> 
+    width(j = 1, 3.8, unit = "in")
+```
+
+#### ST23_Work
+**Consistency between Santé-Travail 2023 and WORK**
+```{r}
+consistency_job_sectors_st23_work <- consistency_job_sectors |> 
+  group_by(factor(st_23)) |> 
+  summarise(
+    n_pairs = sum(!is.na(st_23_work)),
+    consistent = sum(st_23_work, na.rm = TRUE),
+    percent = paste0(round(consistent / n_pairs, 2)*100, "%")
+  ) 
+consistency_job_sectors_st23_work |> myflextable() |> 
+    width(j = 1, 3.8, unit = "in")
+```
