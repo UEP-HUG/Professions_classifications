@@ -81,7 +81,15 @@ myflextable = function(data, ...) {
   return(x)
 }
 ```
-# Profession summaries {.tabset}
+# Profession summaries {.tabset}  
+## ISCO summaries {.tabset}  
+Below are a few summaries, where N is the number of participants in each grouping, HCW_n is the number of healthcare workers in each grouping, and HCW_percent is the percentage of healthcare workers in each grouping (= HCW_n  / N).
+
+NA are those not yet classified, and “Recoding impossible” are people who submitted non-answers, e.g. “---”, or answers that don’t correspond to ISCO classifications, e.g. “étudiant” or “mere au foyer”.  
+
+### Participant per timepoint {.tabset}  
+Dataset of participants at each available timepoint.  
+**Note:** N can include multiple entries for a single participant, if they replied to more than one of the questionnaires considered here (WORK, Inclusion-KIDS, and Santé-Travail 2022/2023).  
 ```{r}
 # Occupation summaries ####
 summary_overall <- merged |> 
@@ -172,13 +180,7 @@ summary_level_3_pop <- merged |>
   mutate(ISCO = as.integer(ISCO)) |> 
   arrange(ISCO)
 ```
-
-## ISCO summaries {.tabset}  
-Below are a few summaries, where N is the number of participants in each grouping, HCW_n is the number of healthcare workers in each grouping, and HCW_percent is the percentage of healthcare workers in each grouping (= HCW_n  / N). Note: N can include multiple entries for a single participant, if they replied to more than one of the questionnaires considered here (WORK, Inclusion-KIDS, and Santé-Travail 2022/2023).  
-
-NA are those not yet classified, and “Recoding impossible” are people who submitted non-answers, e.g. “---”, or answers that don’t correspond to ISCO classifications, e.g. “étudiant” or “mere au foyer”.  
-
-### ISCO level 1
+#### ISCO level 1
 **By the most general ISCO grouping (“Major groups”)**
 ```{r}
 summary_1 <- rbind(summary_overall, summary_level_1) 
@@ -195,7 +197,7 @@ summary_1_pop |> myflextable() |>
   bold(i = 1)
 ```
 
-### ISCO level 2
+#### ISCO level 2
 **By the level 2 ISCO grouping:**
 ```{r}
 summary_2 <- rbind(summary_overall, summary_level_2) 
@@ -211,7 +213,7 @@ summary_2_pop |> myflextable() |>
   bold(i = 1)
 ```
 
-### ISCO level 3
+#### ISCO level 3
 **By the level 3 ISCO grouping:**
 ```{r}
 summary_3 <- rbind(summary_overall, summary_level_3) 
@@ -226,6 +228,154 @@ summary_3_pop |> myflextable() |>
   width(j = 1, 3.8, unit = "in") |> 
   bold(i = 1)
 ```
+
+### 1 observation / participant {.tabset}  
+Dataset where only one timepoint (the earliest available timepoint) per participant is kept.
+```{r}
+# Occupation summaries ####
+merged_sliced <- merged |> 
+  group_by(codbar) |> 
+  slice_min(order_by = date_soumission, n = 1) |>
+  ungroup()
+
+summary_sliced_overall <- merged_sliced |> 
+  summarise(N = n(),
+            HCW_n = sum(health_workers, na.rm = TRUE),
+            HCW_percent = paste0(round(HCW_n / N, 3)*100, "%")
+  ) |> 
+  mutate(ISCO_label = "Overall", ISCO = "-") |> 
+  relocate(c(ISCO_label, ISCO), .before = N)
+
+summary_sliced_overall_pop <- merged_sliced |> 
+  filter(serocov_pop | sp2_novdec_2020 | sp3_juin_2021 | sp4_avril_2022) |> 
+  summarise(N = n(),
+            HCW_n = sum(health_workers, na.rm = TRUE),
+            HCW_percent = paste0(round(HCW_n / N, 3)*100, "%")
+  ) |> 
+  mutate(ISCO_label = "Overall", ISCO = "-") |> 
+  relocate(c(ISCO_label, ISCO), .before = N)
+
+# Level 1
+summary_sliced_level_1 <- merged_sliced |> 
+  group_by(ISCO_label_1, isco_1) |> 
+  # count(ISCO_label_1, isco_1,health_workers)
+  summarise(N = n(),
+            HCW_n = sum(health_workers, na.rm = TRUE),
+            HCW_percent = paste0(round(HCW_n / N, 3)*100, "%")
+  ) |> 
+  rename(ISCO_label = ISCO_label_1, ISCO = isco_1) |> 
+  mutate(ISCO = as.integer(ISCO)) |> 
+  arrange(ISCO)
+
+summary_sliced_level_1_pop <- merged_sliced |> 
+  filter(serocov_pop | sp2_novdec_2020 | sp3_juin_2021 | sp4_avril_2022) |> 
+  group_by(ISCO_label_1, isco_1) |> 
+  # count(ISCO_label_1, isco_1,health_workers)
+  summarise(N = n(),
+            HCW_n = sum(health_workers, na.rm = TRUE),
+            HCW_percent = paste0(round(HCW_n / N, 3)*100, "%")
+  ) |> 
+  rename(ISCO_label = ISCO_label_1, ISCO = isco_1) |> 
+  mutate(ISCO = as.integer(ISCO)) |> 
+  arrange(ISCO)
+
+# Level 2
+summary_sliced_level_2 <- merged_sliced |> 
+  group_by(ISCO_label_2, isco_2) |> 
+  # count(ISCO_label_1, isco_1,health_workers)
+  summarise(N = n(),
+            HCW_n = sum(health_workers, na.rm = TRUE),
+            HCW_percent = paste0(round(HCW_n / N, 3)*100, "%")
+  ) |> 
+  rename(ISCO_label = ISCO_label_2, ISCO = isco_2) |> 
+  mutate(ISCO = as.integer(ISCO)) |> 
+  arrange(ISCO)
+
+summary_sliced_level_2_pop <- merged_sliced |> 
+  filter(serocov_pop | sp2_novdec_2020 | sp3_juin_2021 | sp4_avril_2022) |> 
+  group_by(ISCO_label_2, isco_2) |> 
+  # count(ISCO_label_1, isco_1,health_workers)
+  summarise(N = n(),
+            HCW_n = sum(health_workers, na.rm = TRUE),
+            HCW_percent = paste0(round(HCW_n / N, 3)*100, "%")
+  ) |> 
+  rename(ISCO_label = ISCO_label_2, ISCO = isco_2) |> 
+  mutate(ISCO = as.integer(ISCO)) |> 
+  arrange(ISCO)
+
+# Level 3
+summary_sliced_level_3 <- merged_sliced |> 
+  group_by(ISCO_label_3, isco_3) |> 
+  summarise(N = n(),
+            HCW_n = sum(health_workers, na.rm = TRUE),
+            HCW_percent = paste0(round(HCW_n / N, 3)*100, "%")
+  ) |> 
+  rename(ISCO_label = ISCO_label_3, ISCO = isco_3) |> 
+  mutate(ISCO = as.integer(ISCO)) |> 
+  arrange(ISCO)
+
+summary_sliced_level_3_pop <- merged_sliced |> 
+  filter(serocov_pop | sp2_novdec_2020 | sp3_juin_2021 | sp4_avril_2022) |> 
+  group_by(ISCO_label_3, isco_3) |> 
+  # count(ISCO_label_1, isco_1,health_workers)
+  summarise(N = n(),
+            HCW_n = sum(health_workers, na.rm = TRUE),
+            HCW_percent = paste0(round(HCW_n / N, 3)*100, "%")
+  ) |> 
+  rename(ISCO_label = ISCO_label_3, ISCO = isco_3) |> 
+  mutate(ISCO = as.integer(ISCO)) |> 
+  arrange(ISCO)
+```
+
+#### ISCO level 1
+**By the most general ISCO grouping (“Major groups”)**
+```{r}
+summary_sliced_1 <- rbind(summary_sliced_overall, summary_sliced_level_1) 
+summary_sliced_1 |> myflextable() |> 
+  width(j = 1, 3.8, unit = "in") |> 
+  bold(i = 1)
+```
+
+The same as above but keeping only participants recruited from one of the respresentative serosurveys (SP1, SP2, SP3, SP4):
+```{r}
+summary_sliced_1_pop <- rbind(summary_sliced_overall_pop, summary_sliced_level_1_pop) 
+summary_sliced_1_pop |> myflextable() |> 
+  width(j = 1, 3.8, unit = "in") |> 
+  bold(i = 1)
+```
+
+#### ISCO level 2
+**By the level 2 ISCO grouping:**
+```{r}
+summary_sliced_2 <- rbind(summary_sliced_overall, summary_sliced_level_2) 
+summary_sliced_2 |> myflextable() |> 
+  width(j = 1, 3.8, unit = "in") |> 
+  bold(i = 1)
+```
+The same as above but keeping only participants recruited from one of the respresentative serosurveys (SP1, SP2, SP3, SP4):
+```{r}
+summary_sliced_2_pop <- rbind(summary_sliced_overall_pop, summary_sliced_level_2_pop) 
+summary_sliced_2_pop |> myflextable() |> 
+  width(j = 1, 3.8, unit = "in") |> 
+  bold(i = 1)
+```
+
+#### ISCO level 3
+**By the level 3 ISCO grouping:**
+```{r}
+summary_sliced_3 <- rbind(summary_sliced_overall, summary_sliced_level_3) 
+summary_sliced_3 |> myflextable() |> 
+  width(j = 1, 3.8, unit = "in") |> 
+  bold(i = 1)
+```
+The same as above but keeping only participants recruited from one of the respresentative serosurveys (SP1, SP2, SP3, SP4):
+```{r}
+summary_sliced_3_pop <- rbind(summary_sliced_overall_pop, summary_sliced_level_3_pop) 
+summary_sliced_3_pop |> myflextable() |> 
+  width(j = 1, 3.8, unit = "in") |> 
+  bold(i = 1)
+```
+
 
 ## Job sector summaries {.tabset}
 ### Harmonized  
