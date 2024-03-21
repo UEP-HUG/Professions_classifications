@@ -1,4 +1,4 @@
-pacman::p_load(tidyverse, here)
+pacman::p_load(tidyverse, here, flextable)
 
 # define standard myflextable function 
 myflextable = function(data, ...) {
