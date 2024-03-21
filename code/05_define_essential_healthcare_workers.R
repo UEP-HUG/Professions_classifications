@@ -43,8 +43,9 @@ work <- read_csv("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Base_de_donnée
 
 ## Sante-travail 2022 ####
 st_22 <- readRDS("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Bases_for_sharing/2023-09-21-1145_SanteTravail_ALLparticipants.rds") |> 
-  select(participant_id, job_sector) |> 
-  rename(job_sector.st_22 = job_sector) |> 
+  select(participant_id, job_sector, years_of_service, work_situation, work_situation_other) |> 
+  rename(job_sector.st_22 = job_sector, years_of_service.st_22 = years_of_service,
+         work_situation.st_22 = work_situation, work_situation_other.st_22 = work_situation_other) |> 
   mutate(sector_self_reported.st_22 = TRUE)
 
 ## Sante-travail 2023 ####
@@ -67,7 +68,10 @@ sector_st_23 <- sector_st_23 |>
          job_sector = str_replace(job_sector, "99","Other")
   )
 st_23 <- left_join(st_23, sector_st_23) |> 
-  select(participant_id, job_sector) |> rename(job_sector.st_23 = job_sector) |> 
+  select(participant_id, job_sector, years_of_service, status_employed, status_self_employed, status_99, status_other_text) |> 
+  rename(job_sector.st_23 = job_sector, years_of_service.st_23 = years_of_service,
+         status_employed.st_23 = status_employed, status_self_employed.st_23 = status_self_employed, 
+         status_99.st_23 = status_99, status_other_text.st_23 = status_other_text) |> 
   mutate(sector_self_reported.st_23 = TRUE)
 
 rm(sector_st_23, wc)
