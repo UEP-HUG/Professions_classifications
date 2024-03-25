@@ -176,7 +176,7 @@ rbind(summary_overall, summary_level_1) |>
   bold(i = 1)
 ```
 
-The same as above but keeping only participants recruited from one of the respresentative serosurveys (SP1, SP2, SP3, SP4):
+The same as above but keeping only participants participating in one of the respresentative serosurveys (SP1, SP2, SP3, SP4):
 ```{r}
 rbind(summary_overall_pop, summary_level_1_pop) |> 
   mutate(n_perc = paste0(n, " (", round(perc,3)*100, "%)")) |> 
@@ -212,7 +212,7 @@ rbind(summary_overall, summary_level_2) |>
   width(j = 3:6, 1.2, unit = "in") |> 
   bold(i = 1)
 ```
-The same as above but keeping only participants recruited from one of the respresentative serosurveys (SP1, SP2, SP3, SP4):
+The same as above but keeping only participants participating in one of the respresentative serosurveys (SP1, SP2, SP3, SP4):
 ```{r}
 rbind(summary_overall_pop, summary_level_2_pop) |> 
   mutate(n_perc = paste0(n, " (", round(perc,3)*100, "%)")) |> 
@@ -248,7 +248,7 @@ rbind(summary_overall, summary_level_3) |>
   width(j = 3:6, 1.2, unit = "in") |> 
   bold(i = 1)
 ```
-The same as above but keeping only participants recruited from one of the respresentative serosurveys (SP1, SP2, SP3, SP4):
+The same as above but keeping only participants participating in one of the respresentative serosurveys (SP1, SP2, SP3, SP4):
 ```{r}
 rbind(summary_overall_pop, summary_level_3_pop) |> 
   mutate(n_perc = paste0(n, " (", round(perc,3)*100, "%)")) |> 
@@ -267,152 +267,188 @@ rbind(summary_overall_pop, summary_level_3_pop) |>
 ```
 
 ### 1 observation / participant {.tabset}  
-Dataset where only one timepoint (the earliest available timepoint) per participant is kept.
 ```{r}
 # Occupation summaries ####
+
+# First slice the dataset to have only one observation per participant
 merged_sliced <- merged |> 
   group_by(codbar) |> 
   slice_min(order_by = date_soumission, n = 1) |>
   ungroup()
 
-summary_sliced_overall <- merged_sliced |> 
-  summarise(N = n(),
-            HCW_n = sum(health_workers, na.rm = TRUE),
-            HCW_percent = paste0(round(HCW_n / N, 3)*100, "%")
+summary_sliced_overall <- merged_sliced |> count(occupation_type) |> 
+  mutate(
+    perc = n / sum(n),
+    ISCO_label = "Overall",
+    ISCO = -1000
   ) |> 
-  mutate(ISCO_label = "Overall", ISCO = "-") |> 
-  relocate(c(ISCO_label, ISCO), .before = N)
+  relocate(c(ISCO_label, ISCO))
 
 summary_sliced_overall_pop <- merged_sliced |> 
   filter(serocov_pop | sp2_novdec_2020 | sp3_juin_2021 | sp4_avril_2022) |> 
-  summarise(N = n(),
-            HCW_n = sum(health_workers, na.rm = TRUE),
-            HCW_percent = paste0(round(HCW_n / N, 3)*100, "%")
+  count(occupation_type) |> 
+  mutate(
+    perc = n / sum(n),
+    ISCO_label = "Overall",
+    ISCO = -1000
   ) |> 
-  mutate(ISCO_label = "Overall", ISCO = "-") |> 
-  relocate(c(ISCO_label, ISCO), .before = N)
+  relocate(c(ISCO_label, ISCO))
+
+cols <- c("other_occupation", "health_worker", "key_occupation", "na")
 
 # Level 1
 summary_sliced_level_1 <- merged_sliced |> 
-  group_by(ISCO_label_1, isco_1) |> 
-  # count(ISCO_label_1, isco_1,health_workers)
-  summarise(N = n(),
-            HCW_n = sum(health_workers, na.rm = TRUE),
-            HCW_percent = paste0(round(HCW_n / N, 3)*100, "%")
-  ) |> 
-  rename(ISCO_label = ISCO_label_1, ISCO = isco_1) |> 
-  mutate(ISCO = as.integer(ISCO)) |> 
-  arrange(ISCO)
+  group_by(ISCO_label_1, isco_1) |>
+  count(occupation_type) |> 
+  mutate(perc = n / sum(n)) |>
+  rename(ISCO_label = ISCO_label_1, ISCO = isco_1)
 
 summary_sliced_level_1_pop <- merged_sliced |> 
   filter(serocov_pop | sp2_novdec_2020 | sp3_juin_2021 | sp4_avril_2022) |> 
-  group_by(ISCO_label_1, isco_1) |> 
-  # count(ISCO_label_1, isco_1,health_workers)
-  summarise(N = n(),
-            HCW_n = sum(health_workers, na.rm = TRUE),
-            HCW_percent = paste0(round(HCW_n / N, 3)*100, "%")
-  ) |> 
-  rename(ISCO_label = ISCO_label_1, ISCO = isco_1) |> 
-  mutate(ISCO = as.integer(ISCO)) |> 
-  arrange(ISCO)
+  group_by(ISCO_label_1, isco_1) |>
+  count(occupation_type) |> 
+  mutate(perc = n / sum(n)) |>
+  rename(ISCO_label = ISCO_label_1, ISCO = isco_1)
 
 # Level 2
 summary_sliced_level_2 <- merged_sliced |> 
-  group_by(ISCO_label_2, isco_2) |> 
-  # count(ISCO_label_1, isco_1,health_workers)
-  summarise(N = n(),
-            HCW_n = sum(health_workers, na.rm = TRUE),
-            HCW_percent = paste0(round(HCW_n / N, 3)*100, "%")
-  ) |> 
-  rename(ISCO_label = ISCO_label_2, ISCO = isco_2) |> 
-  mutate(ISCO = as.integer(ISCO)) |> 
-  arrange(ISCO)
+  group_by(ISCO_label_2, isco_2) |>
+  count(occupation_type) |> 
+  mutate(perc = n / sum(n)) |>
+  rename(ISCO_label = ISCO_label_2, ISCO = isco_2)
 
 summary_sliced_level_2_pop <- merged_sliced |> 
   filter(serocov_pop | sp2_novdec_2020 | sp3_juin_2021 | sp4_avril_2022) |> 
-  group_by(ISCO_label_2, isco_2) |> 
-  # count(ISCO_label_1, isco_1,health_workers)
-  summarise(N = n(),
-            HCW_n = sum(health_workers, na.rm = TRUE),
-            HCW_percent = paste0(round(HCW_n / N, 3)*100, "%")
-  ) |> 
-  rename(ISCO_label = ISCO_label_2, ISCO = isco_2) |> 
-  mutate(ISCO = as.integer(ISCO)) |> 
-  arrange(ISCO)
+  group_by(ISCO_label_2, isco_2) |>
+  count(occupation_type) |> 
+  mutate(perc = n / sum(n)) |>
+  rename(ISCO_label = ISCO_label_2, ISCO = isco_2)
 
 # Level 3
 summary_sliced_level_3 <- merged_sliced |> 
-  group_by(ISCO_label_3, isco_3) |> 
-  summarise(N = n(),
-            HCW_n = sum(health_workers, na.rm = TRUE),
-            HCW_percent = paste0(round(HCW_n / N, 3)*100, "%")
-  ) |> 
-  rename(ISCO_label = ISCO_label_3, ISCO = isco_3) |> 
-  mutate(ISCO = as.integer(ISCO)) |> 
-  arrange(ISCO)
+  group_by(ISCO_label_3, isco_3) |>
+  count(occupation_type) |> 
+  mutate(perc = n / sum(n)) |>
+  rename(ISCO_label = ISCO_label_3, ISCO = isco_3)
 
 summary_sliced_level_3_pop <- merged_sliced |> 
   filter(serocov_pop | sp2_novdec_2020 | sp3_juin_2021 | sp4_avril_2022) |> 
-  group_by(ISCO_label_3, isco_3) |> 
-  # count(ISCO_label_1, isco_1,health_workers)
-  summarise(N = n(),
-            HCW_n = sum(health_workers, na.rm = TRUE),
-            HCW_percent = paste0(round(HCW_n / N, 3)*100, "%")
-  ) |> 
-  rename(ISCO_label = ISCO_label_3, ISCO = isco_3) |> 
-  mutate(ISCO = as.integer(ISCO)) |> 
-  arrange(ISCO)
-```
+  group_by(ISCO_label_3, isco_3) |>
+  count(occupation_type) |> 
+  mutate(perc = n / sum(n)) |>
+  rename(ISCO_label = ISCO_label_3, ISCO = isco_3)
 
+
+
+```
 #### ISCO level 1
 **By the most general ISCO grouping (“Major groups”)**
 ```{r}
-summary_sliced_1 <- rbind(summary_sliced_overall, summary_sliced_level_1) 
-summary_sliced_1 |> myflextable() |> 
+rbind(summary_sliced_overall, summary_sliced_level_1) |> 
+  mutate(n_perc = paste0(n, " (", round(perc,3)*100, "%)")) |> 
+  select(-c(n, perc)) |> 
+  pivot_wider(
+  names_from = occupation_type,
+  values_from = n_perc
+) |>
+  janitor::clean_names() |> 
+  mutate(isco = case_when(isco == -1000 ~ "-", .default = paste0(isco))) |> 
+  mutate(across(all_of(cols), ~replace(., is.na(.), 0))) |> 
+  myflextable()|> 
   width(j = 1, 3.8, unit = "in") |> 
+  width(j = 3:6, 1.2, unit = "in") |> 
   bold(i = 1)
 ```
 
-The same as above but keeping only participants recruited from one of the respresentative serosurveys (SP1, SP2, SP3, SP4):
+The same as above but keeping only participants participating in one of the respresentative serosurveys (SP1, SP2, SP3, SP4):
 ```{r}
-summary_sliced_1_pop <- rbind(summary_sliced_overall_pop, summary_sliced_level_1_pop) 
-summary_sliced_1_pop |> myflextable() |> 
+rbind(summary_sliced_overall_pop, summary_sliced_level_1_pop) |> 
+  mutate(n_perc = paste0(n, " (", round(perc,3)*100, "%)")) |> 
+  select(-c(n, perc)) |> 
+  pivot_wider(
+  names_from = occupation_type,
+  values_from = n_perc
+) |>
+  janitor::clean_names() |> 
+  mutate(isco = case_when(isco == -1000 ~ "-", .default = paste0(isco))) |> 
+  mutate(across(all_of(cols), ~replace(., is.na(.), 0))) |> 
+  myflextable()|> 
   width(j = 1, 3.8, unit = "in") |> 
+  width(j = 3:6, 1.2, unit = "in") |> 
   bold(i = 1)
 ```
 
 #### ISCO level 2
 **By the level 2 ISCO grouping:**
 ```{r}
-summary_sliced_2 <- rbind(summary_sliced_overall, summary_sliced_level_2) 
-summary_sliced_2 |> myflextable() |> 
+rbind(summary_sliced_overall, summary_sliced_level_2) |> 
+  mutate(n_perc = paste0(n, " (", round(perc,3)*100, "%)")) |> 
+  select(-c(n, perc)) |> 
+  pivot_wider(
+  names_from = occupation_type,
+  values_from = n_perc
+) |>
+  janitor::clean_names() |> 
+  mutate(isco = case_when(isco == -1000 ~ "-", .default = paste0(isco))) |> 
+  mutate(across(all_of(cols), ~replace(., is.na(.), 0))) |> 
+  myflextable()|> 
   width(j = 1, 3.8, unit = "in") |> 
+  width(j = 3:6, 1.2, unit = "in") |> 
   bold(i = 1)
 ```
-The same as above but keeping only participants recruited from one of the respresentative serosurveys (SP1, SP2, SP3, SP4):
+The same as above but keeping only participants participating in one of the respresentative serosurveys (SP1, SP2, SP3, SP4):
 ```{r}
-summary_sliced_2_pop <- rbind(summary_sliced_overall_pop, summary_sliced_level_2_pop) 
-summary_sliced_2_pop |> myflextable() |> 
+rbind(summary_sliced_overall_pop, summary_sliced_level_2_pop) |> 
+  mutate(n_perc = paste0(n, " (", round(perc,3)*100, "%)")) |> 
+  select(-c(n, perc)) |> 
+  pivot_wider(
+  names_from = occupation_type,
+  values_from = n_perc
+) |>
+  janitor::clean_names() |> 
+  mutate(isco = case_when(isco == -1000 ~ "-", .default = paste0(isco))) |> 
+  mutate(across(all_of(cols), ~replace(., is.na(.), 0))) |> 
+  myflextable()|> 
   width(j = 1, 3.8, unit = "in") |> 
+  width(j = 3:6, 1.2, unit = "in") |> 
   bold(i = 1)
 ```
 
 #### ISCO level 3
 **By the level 3 ISCO grouping:**
 ```{r}
-summary_sliced_3 <- rbind(summary_sliced_overall, summary_sliced_level_3) 
-summary_sliced_3 |> myflextable() |> 
+rbind(summary_sliced_overall, summary_sliced_level_3) |> 
+  mutate(n_perc = paste0(n, " (", round(perc,3)*100, "%)")) |> 
+  select(-c(n, perc)) |> 
+  pivot_wider(
+  names_from = occupation_type,
+  values_from = n_perc
+) |>
+  janitor::clean_names() |> 
+  mutate(isco = case_when(isco == -1000 ~ "-", .default = paste0(isco))) |> 
+  mutate(across(all_of(cols), ~replace(., is.na(.), 0))) |> 
+  myflextable()|> 
   width(j = 1, 3.8, unit = "in") |> 
+  width(j = 3:6, 1.2, unit = "in") |> 
   bold(i = 1)
 ```
-The same as above but keeping only participants recruited from one of the respresentative serosurveys (SP1, SP2, SP3, SP4):
+The same as above but keeping only participants participating in one of the respresentative serosurveys (SP1, SP2, SP3, SP4):
 ```{r}
-summary_sliced_3_pop <- rbind(summary_sliced_overall_pop, summary_sliced_level_3_pop) 
-summary_sliced_3_pop |> myflextable() |> 
+rbind(summary_sliced_overall_pop, summary_sliced_level_3_pop) |> 
+  mutate(n_perc = paste0(n, " (", round(perc,3)*100, "%)")) |> 
+  select(-c(n, perc)) |> 
+  pivot_wider(
+  names_from = occupation_type,
+  values_from = n_perc
+) |>
+  janitor::clean_names() |> 
+  mutate(isco = case_when(isco == -1000 ~ "-", .default = paste0(isco))) |> 
+  mutate(across(all_of(cols), ~replace(., is.na(.), 0))) |> 
+  myflextable()|> 
   width(j = 1, 3.8, unit = "in") |> 
+  width(j = 3:6, 1.2, unit = "in") |> 
   bold(i = 1)
 ```
-
 
 ## Job sector summaries {.tabset}
 ### Harmonized  
