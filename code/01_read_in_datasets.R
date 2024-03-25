@@ -87,7 +87,7 @@ st_22 <- readRDS("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Bases_for_shari
     )
 
 ### 2023 ####
-st_23 <- readRDS("P:/ODS/DMCPRU/UEPDATA/Pour_user/Pour_Anshu/santé_travail_11_2023-202401221247.rds")|> # preliminary version from Sergeui
+st_23 <- readRDS("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/Pour_user/Pour_Anshu/santé_travail_11_2023-202401221247.rds")|> # preliminary version from Sergeui
   left_join(birthdates) |>
   mutate(
     date_soumission = as_date(date_soumission),
