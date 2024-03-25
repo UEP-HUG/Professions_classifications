@@ -119,8 +119,15 @@ merged <- left_join(occup_final_cleaned, key_occupations, by = join_by("isco_2" 
     years_of_service = case_when(
       source == "st_22" ~ years_of_service.st_22,
       source == "st_23" ~ years_of_service.st_23,
-      .default = NA
-    ),
+      .default = NA),
+    years_of_service = factor(case_when(
+      years_of_service == "De 6 mois à moins d’1 an" ~ "De 6 mois à 1 an",
+      years_of_service == "De 1 an à moins de 5 ans" ~ "De plus d’1 an à 5 ans",
+      years_of_service == "De 5 ans à moins de 10 ans" ~ "De plus de 5 ans à 10 ans",
+      years_of_service == "Plus de 10 ans" ~ "10 ans ou plus",
+      .default = years_of_service),
+      levels = c("Moins de 6 mois", "De 6 mois à 1 an", "De plus d’1 an à 5 ans", "De plus de 5 ans à 10 ans", "10 ans ou plus")),
+      
     work_situation = case_when(
       source == "Work" ~ "Employed",
       source == "st_22" ~ work_situation.st_22,
@@ -129,12 +136,25 @@ merged <- left_join(occup_final_cleaned, key_occupations, by = join_by("isco_2" 
       source == "inc_kids" ~ work_situation.inc_kids,
       .default = NA
     ),
-    key_occupation = case_when(is.na(isco_full) ~ NA,
+    actively_working = case_when(
+      is.na(work_situation) ~ NA,
+      str_detect(str_to_lower(work_situation), "employed|salarié|indépendant") ~ TRUE,
+      .default = FALSE),
+    key_occupation = case_when(is.na(isco_full) | isco_full == -999 ~ NA,
                                key_occupation == "TRUE" ~ TRUE, .default = FALSE), # define essential / key worker
     # serocov_work = case_when(serocov_work ~ "Yes", .default = "No"), # recode as Yes / No
     # define health workers
-    health_workers = case_when(is.na(isco_full) ~ NA,
+    health_workers = case_when(is.na(isco_full) | isco_full == -999 ~ NA,
                                HCW == "Yes" ~ TRUE, .default = FALSE),
+    # Make a single variable that defines the type of occupation
+    occupation_type = factor(case_when(
+      is.na(isco_full) | isco_full == -999 ~ NA,
+      health_workers ~ "Health worker",
+      key_occupation ~ "Key occupation",
+      .default = "Other occupation"),
+      levels = c("Other occupation", "Health worker", "Key occupation")),
+
+    # Combine job sectors from the three questionnaires
     job_sector = case_when(
       source == "Work" ~ job_sector.work,
       source == "st_22" ~ job_sector.st_22,
@@ -150,6 +170,7 @@ merged <- left_join(occup_final_cleaned, key_occupations, by = join_by("isco_2" 
   select(-c(HCW, label, occupational_grouping, Name_fr, job_sector.st_22, job_sector.st_23, 
             starts_with("years_of_service."), starts_with("work_situation."), starts_with("job_status."))) |>
   relocate(codbar, .after = participant_id) |> 
+  relocate(key_occupation, .after = health_workers) |> 
   # Bus santé dataset-specific
   # mutate(Code = str_split_i(participant_id, "_", 1)) |> relocate(Code, .after = participant_id)
   
