@@ -19,7 +19,7 @@ merged <- readRDS(here("output", "ISCO_fuzzy_recoded_occupations.rds"))
 st_22 <- readRDS("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Bases_for_sharing/2023-09-21-1145_SanteTravail_ALLparticipants.rds") |> select(participant_id, job_sector)
 
 # Sante-travail 2023
-st_23 <- readRDS("P:/ODS/DMCPRU/UEPDATA/Pour_user/Pour_Anshu/santé_travail_11_2023-202401221247.rds")|> # preliminary version from Sergeui
+st_23 <- readRDS("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/Pour_user/Pour_Anshu/santé_travail_11_2023-202401221247.rds")|> # preliminary version from Sergeui
   group_by(participant_id) |> filter(n() < 2) |> ungroup()  # remove duplicate entries
 
 sector_st_23 <- st_23 |> select(participant_id, starts_with("job_sector")) |> 
