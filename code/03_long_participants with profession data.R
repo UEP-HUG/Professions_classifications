@@ -1,5 +1,5 @@
 pacman::p_load(here)
-source(here("code","02_combine_datasets.R"))
+source(here("code","02_select_variables.R"))
 
 # Datasets with some free-text on occupation ####
 exp_work <- dat_work |> select(codbar, date_soumission.WORK) |> mutate(source = "Work") |> rename(date_soumission = date_soumission.WORK)
