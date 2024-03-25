@@ -16,7 +16,17 @@ if (file.exists(here("output", "cleaned_fuzzy_classified_occupations.rds"))) {
 ## Inclusion ####
 inclusion <- readRDS("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Bases_for_sharing/2023-10-11-1616_ALLincsVs012345_ALLparticipants.rds") |>
   filter(Origin != "V5_inclusion") |>
-  select(participant_id, codbar, serocov_work, serocov_pop, sp2_novdec_2020, sp3_juin_2021, sp4_avril_2022, pop_pilote)
+  select(participant_id, codbar, serocov_work, serocov_pop, sp2_novdec_2020, sp3_juin_2021, sp4_avril_2022, pop_pilote, work_situation) |> 
+  rename(work_situation.inc = work_situation)
+
+## Inclusion - KIDS ####
+inc_kids <- readRDS("P:/ODS/DMCPRU/UEPDATA/SEROCoV-KIDS/99_data/6_database/00_cleaned_augmented_database/2024-01-24_KIDS_inclusion_nov21_202401231106.rds") |> 
+  filter(!is.na(parent1_profession)) |>
+  select(parent1_codbar, parent1_work_situation) |> 
+  rename(codbar = parent1_codbar, work_situation.inc_kids = parent1_work_situation) |>
+  arrange(codbar) |> 
+  distinct() |> 
+  group_by(codbar) |> filter(n() == 1) |> ungroup()
 
 ## Work ####
 ### Sector index ####
@@ -43,15 +53,31 @@ work <- read_csv("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Base_de_donnée
 
 ## Sante-travail 2022 ####
 st_22 <- readRDS("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Bases_for_sharing/2023-09-21-1145_SanteTravail_ALLparticipants.rds") |> 
-  select(participant_id, job_sector, years_of_service, work_situation, work_situation_other) |> 
-  rename(job_sector.st_22 = job_sector, years_of_service.st_22 = years_of_service,
-         work_situation.st_22 = work_situation, work_situation_other.st_22 = work_situation_other) |> 
+  select(participant_id, job_sector, years_of_service, work_situation) |> 
+  rename_with(~ paste(., "st_22", sep = "."), !matches(c("codbar", "participant_id"))) |> 
   mutate(sector_self_reported.st_22 = TRUE)
 
 ## Sante-travail 2023 ####
 st_23 <- readRDS("P:/ODS/DMCPRU/UEPDATA/Pour_user/Pour_Anshu/santé_travail_11_2023-202401221247.rds")|> # preliminary version from Sergeui
   group_by(participant_id) |> filter(n() < 2) |> ungroup()  # remove duplicate entries
 
+### Unite job status ####
+status_st_23 <- st_23 |> select(participant_id, starts_with("status")) |> 
+  select(-c(status_other_text, status_change)) |>
+  mutate(across(starts_with("status"), ~na_if(., FALSE)))
+
+status_wc <- droplevels(col(status_st_23, as.factor=TRUE)[which(status_st_23 == "TRUE")])
+status_st_23[levels(status_wc)] <- Map(factor, status_st_23[levels(status_wc)], labels = levels(status_wc))
+status_st_23 <- status_st_23 |> 
+  unite("job_status", status_employed:status_99, na.rm = TRUE, sep = " ; ") |> 
+  mutate(job_status = str_replace_all(job_status, "status_",""),
+         job_status = str_replace(job_status, "99","Other")
+  )
+st_23 <- left_join(st_23, status_st_23)
+rm(status_st_23, status_wc)
+
+
+### Unite job sectors ####
 sector_st_23 <- st_23 |> select(participant_id, starts_with("job_sector")) |> 
   select(-job_sector_other_text) |>
   mutate(
@@ -68,10 +94,8 @@ sector_st_23 <- sector_st_23 |>
          job_sector = str_replace(job_sector, "99","Other")
   )
 st_23 <- left_join(st_23, sector_st_23) |> 
-  select(participant_id, job_sector, years_of_service, status_employed, status_self_employed, status_99, status_other_text) |> 
-  rename(job_sector.st_23 = job_sector, years_of_service.st_23 = years_of_service,
-         status_employed.st_23 = status_employed, status_self_employed.st_23 = status_self_employed, 
-         status_99.st_23 = status_99, status_other_text.st_23 = status_other_text) |> 
+  select(participant_id, job_sector, years_of_service, job_status) |> 
+  rename_with(~ paste(., "st_23", sep = "."), !matches(c("codbar", "participant_id"))) |> 
   mutate(sector_self_reported.st_23 = TRUE)
 
 rm(sector_st_23, wc)
@@ -87,10 +111,24 @@ merged <- left_join(occup_final_cleaned, key_occupations, by = join_by("isco_2" 
   left_join(HCW, by = join_by("isco_full" == "ISCO")) |> 
   # Merge with inclusion for serocov_work variable
   left_join(inclusion) |> # comment out for bus santé
+  left_join(inc_kids) |> 
   left_join(work) |> 
   left_join(st_22) |> 
   left_join(st_23) |> 
   mutate(
+    years_of_service = case_when(
+      source == "st_22" ~ years_of_service.st_22,
+      source == "st_23" ~ years_of_service.st_23,
+      .default = NA
+    ),
+    work_situation = case_when(
+      source == "Work" ~ "Employed",
+      source == "st_22" ~ work_situation.st_22,
+      source == "st_23" ~ job_status.st_23,
+      source == "Inclusion" ~ work_situation.inc,
+      source == "inc_kids" ~ work_situation.inc_kids,
+      .default = NA
+    ),
     key_occupation = case_when(is.na(isco_full) ~ NA,
                                key_occupation == "TRUE" ~ TRUE, .default = FALSE), # define essential / key worker
     # serocov_work = case_when(serocov_work ~ "Yes", .default = "No"), # recode as Yes / No
@@ -109,7 +147,8 @@ merged <- left_join(occup_final_cleaned, key_occupations, by = join_by("isco_2" 
       .default = NA)
   ) |> 
   # filter(isco_full != -999) |> # remove unclassified people
-  select(-c(HCW, label, occupational_grouping, Name_fr, job_sector.st_22, job_sector.st_23)) |>
+  select(-c(HCW, label, occupational_grouping, Name_fr, job_sector.st_22, job_sector.st_23, 
+            starts_with("years_of_service."), starts_with("work_situation."), starts_with("job_status."))) |>
   relocate(codbar, .after = participant_id) |> 
   # Bus santé dataset-specific
   # mutate(Code = str_split_i(participant_id, "_", 1)) |> relocate(Code, .after = participant_id)
