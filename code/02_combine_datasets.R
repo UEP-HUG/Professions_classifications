@@ -61,37 +61,3 @@ dat_st_23 <- st_23 |>
 dat_work <- work |> 
   select(codbar, sexe, profession, date_soumission, poste_2_autre, poste_final, Secteur_group) |> 
   rename_with(~ paste(., "WORK", sep = "."), !matches(c("codbar")))
-
-### ### ###
-# Combine the timepoints into a Master dataset ####
-### ### ###
-
-## Join Inclusion - Date last submission ####
-dat_master_specchio <- left_join(dat_inclusion, date_last_submission, 
-                                 by = "participant_id") |> 
-  relocate(date_inclusion:beyond_inclusion, .after = codbar)
-
-## Join Inclusion - Parents with General Health 2022 ####
-dat_master_specchio <- left_join(dat_master_specchio, dat_gh_22, 
-                                 by = "codbar")
-
-## Join with General Health 2023 ####
-dat_master_specchio <- left_join(dat_master_specchio, dat_gh_23, 
-                                 by = "codbar")
-
-## Join with Sommeil 2023 ####
-dat_master_specchio <- left_join(dat_master_specchio, dat_sommeil_23, 
-                                 by = "codbar")
-
-## Join with Health Behavior 2022 ####
-dat_master_specchio <- left_join(dat_master_specchio, dat_hb_22, 
-                                 by = "codbar")
-
-
-## Join with Sante Travail 2022 ####
-dat_master_specchio <- left_join(dat_master_specchio, dat_st_22, 
-                                 by = "codbar")
-
-## Join with WORK 2020 ####
-dat_master_specchio <- left_join(dat_master_specchio, dat_work, 
-                                 by = "codbar")
