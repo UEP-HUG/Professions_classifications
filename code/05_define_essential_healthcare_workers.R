@@ -101,8 +101,9 @@ st_23 <- left_join(st_23, sector_st_23) |>
 rm(sector_st_23, wc)
 
 # Key occupations indices from ILO paper (Berg et al., 2023) ####
-key_occupations <- read_xlsx(here("data", "indices_key_HCW.xlsx"), sheet = "key_occupations_ILO_ISCO2")
-HCW <- read_xlsx(here("data", "indices_key_HCW.xlsx"), sheet = "HCW_WHO")
+key_occupations <- read_xlsx(here("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Base_de_données/classification_jobs_anup_jan_2024/indices_key_HCW.xlsx"), sheet = "key_occupations_ILO_ISCO2")
+
+HCW <- read_xlsx(here("P:/ODS/DMCPRU/UEPDATA/Specchio-COVID19/99_data/Base_de_données/classification_jobs_anup_jan_2024/indices_key_HCW.xlsx"), sheet = "HCW_WHO")
 
 
 # Merge the classified occupations with the indices for frontline ("key") occupations
@@ -146,6 +147,9 @@ merged <- left_join(occup_final_cleaned, key_occupations, by = join_by("isco_2" 
     # define health workers
     health_workers = case_when(is.na(isco_full) | isco_full == -999 ~ NA,
                                HCW == "Yes" ~ TRUE, .default = FALSE),
+    key_subgroup = factor(case_when(health_workers | occupational_grouping == "Health workers" ~ NA, 
+                             .default = occupational_grouping)),
+    key_subgroup = fct_relevel(key_subgroup, "Technicians and clerical workers"),
     # Make a single variable that defines the type of occupation
     occupation_type = factor(case_when(
       is.na(isco_full) | isco_full == -999 ~ NA,
@@ -170,7 +174,7 @@ merged <- left_join(occup_final_cleaned, key_occupations, by = join_by("isco_2" 
   select(-c(HCW, label, occupational_grouping, Name_fr, job_sector.st_22, job_sector.st_23, 
             starts_with("years_of_service."), starts_with("work_situation."), starts_with("job_status."))) |>
   relocate(codbar, .after = participant_id) |> 
-  relocate(key_occupation, .after = health_workers) |> 
+  relocate(HCW_subgroup, key_occupation, key_subgroup, .after = health_workers) |> 
   # Bus santé dataset-specific
   # mutate(Code = str_split_i(participant_id, "_", 1)) |> relocate(Code, .after = participant_id)
   
