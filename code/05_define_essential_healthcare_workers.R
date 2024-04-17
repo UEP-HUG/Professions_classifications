@@ -141,7 +141,7 @@ merged <- left_join(occup_final_cleaned, key_occupations, by = join_by("isco_2" 
       is.na(work_situation) ~ NA,
       str_detect(str_to_lower(work_situation), "employed|salarié|indépendant") ~ TRUE,
       .default = FALSE),
-    key_occupation = case_when(is.na(isco_full) | isco_full == -999 ~ NA,
+    key_occupation = case_when(is.na(isco_full) | isco_full == -999 | isco_2 == 22 ~ NA,
                                key_occupation == "TRUE" ~ TRUE, .default = FALSE), # define essential / key worker
     # serocov_work = case_when(serocov_work ~ "Yes", .default = "No"), # recode as Yes / No
     # define health workers
