@@ -549,7 +549,7 @@ occup_final_cleaned <- occup_final |>
     ## **Service and sales workers** ####
     ### Personal service workers ####
     master_profession_original %in% c("") ~ 511,
-    str_detect(master_profession_original, "agent escale|agente escale|agent escale fret") ~ 5111,
+    str_detect(master_profession_original, "agent escale|agente escale|agent escale fret|agent d'escale") ~ 5111,
     master_profession_original %in% c("assistance au pmr a l'aeroport", "gestionnaire en information voyageurs",
                                       "coordinateur d escale", "superviseur service passagers swissport", "superviseurs service passagers",
                                       "domaine aerien/ controle des passagers", "agent de checkin", "agent escale aeroportuaire",
